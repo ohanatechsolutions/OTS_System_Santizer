@@ -104,6 +104,30 @@
      </ListView>
     </Grid>
    </TabItem>
+
+   <TabItem Header="Installed applications">
+    <Grid Margin="8">
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <DockPanel Margin="4,8,0,10">
+      <StackPanel Orientation="Horizontal">
+       <Button Click="RefreshApps_Click" Content="Inspect installed apps"/>
+       <Button Click="OpenApps_Click" Content="Open Windows Uninstall" Background="#2C557B"/>
+      </StackPanel>
+      <TextBlock DockPanel.Dock="Right" Text="Stale-location hints are informational; removal uses Windows Settings."
+       Foreground="#A8BAD0" VerticalAlignment="Center"/>
+     </DockPanel>
+     <ListView x:Name="InstalledAppList" Grid.Row="1">
+      <ListView.View><GridView>
+       <GridViewColumn Header="Application" Width="270" DisplayMemberBinding="{Binding Name}"/>
+       <GridViewColumn Header="Publisher" Width="170" DisplayMemberBinding="{Binding Publisher}"/>
+       <GridViewColumn Header="Version" Width="110" DisplayMemberBinding="{Binding Version}"/>
+       <GridViewColumn Header="Reported size" Width="115" DisplayMemberBinding="{Binding Size}"/>
+       <GridViewColumn Header="Status" Width="260" DisplayMemberBinding="{Binding Status}"/>
+       <GridViewColumn Header="Install folder" Width="420" DisplayMemberBinding="{Binding InstallLocation}"/>
+      </GridView></ListView.View>
+     </ListView>
+    </Grid>
+   </TabItem>
    <TabItem Header="Quarantine">
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>

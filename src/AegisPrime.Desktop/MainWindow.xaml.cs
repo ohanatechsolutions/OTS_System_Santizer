@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -12,6 +13,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<ThreatFinding> _findings = new();
     private readonly ObservableCollection<CleanupRow> _cleanup = new();
     private readonly ObservableCollection<QuarantinedFile> _quarantine = new();
+    private readonly ObservableCollection<InstalledApp> _apps = new();
     private readonly QuarantineService _vault = new();
     private CancellationTokenSource? _scanCancellation;
     private bool _busy;
@@ -22,6 +24,7 @@ public partial class MainWindow : Window
         ThreatList.ItemsSource = _findings;
         CleanupList.ItemsSource = _cleanup;
         QuarantineList.ItemsSource = _quarantine;
+        InstalledAppList.ItemsSource = _apps;
         RefreshVault();
         Log("Application started; no threats assumed absent until relevant scans complete.");
     }
@@ -163,6 +166,26 @@ public partial class MainWindow : Window
         if (result.Failures.Count > 0)
             MessageBox.Show(this, string.Join(Environment.NewLine, result.Failures.Take(8)),
                 "Some files could not be removed", MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
+
+
+    private async void RefreshApps_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        try
+        {
+            var apps = await Task.Run(InstalledAppsService.Enumerate);
+            _apps.Clear();
+            foreach (var app in apps) _apps.Add(app);
+            Log("Inspected " + apps.Count + " installed app registry entries. No changes made.");
+        }
+        catch (Exception ex) { Log("Application inventory error: " + ex.Message); }
+    }
+
+    private void OpenApps_Click(object sender, RoutedEventArgs e)
+    {
+        try { Process.Start(new ProcessStartInfo("ms-settings:appsfeatures") { UseShellExecute = true }); }
+        catch (Exception ex) { Log("Windows Settings could not open: " + ex.Message); }
     }
 
     private void Quarantine_Click(object sender, RoutedEventArgs e)
