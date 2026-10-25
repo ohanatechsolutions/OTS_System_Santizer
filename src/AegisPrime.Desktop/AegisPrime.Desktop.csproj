@@ -1,1 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><EnableWindowsTargeting>true</EnableWindowsTargeting><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>AegisPrime</AssemblyName><RootNamespace>AegisPrime.Desktop</RootNamespace><ApplicationIcon>Assets\AegisPrime.ico</ApplicationIcon><Version>0.1.0</Version></PropertyGroup><ItemGroup><ProjectReference Include="..\AegisPrime.Core\AegisPrime.Core.csproj"/></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+  <OutputType>WinExe</OutputType>
+  <TargetFramework>net10.0-windows</TargetFramework>
+  <UseWPF>true</UseWPF>
+  <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  <Nullable>enable</Nullable>
+  <ImplicitUsings>enable</ImplicitUsings>
+  <AssemblyName>AegisPrime</AssemblyName>
+  <RootNamespace>AegisPrime.Desktop</RootNamespace>
+  <ApplicationIcon>Assets\AegisPrime.ico</ApplicationIcon>
+  <Company>Ohana Tech Solutions</Company>
+  <Product>Aegis Prime</Product>
+  <Description>Windows-native security inspection and safe storage recovery</Description>
+  <Version>0.1.0</Version>
+ </PropertyGroup>
+ <ItemGroup><ProjectReference Include="..\AegisPrime.Core\AegisPrime.Core.csproj"/></ItemGroup>
+</Project>
