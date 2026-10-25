@@ -1,0 +1,81 @@
+name: Windows build, smoke tests and real EXE installer
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore:
+      - 'installer/AegisPrimeSetup-x64.exe'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aegis-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Compile application
+        run: dotnet build src/AegisPrime.Desktop/AegisPrime.Desktop.csproj --configuration Release --nologo
+      - name: Verify cleanup and quarantine policies
+        run: dotnet run --project tests/AegisPrime.SmokeTests/AegisPrime.SmokeTests.csproj --configuration Release
+      - name: Publish Windows x64 native desktop application
+        run: dotnet publish src/AegisPrime.Desktop/AegisPrime.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false --output artifacts/publish
+      - name: Install Inno Setup compiler
+        shell: pwsh
+        run: |
+          if (!(Test-Path 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe')) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "Could not install Inno Setup" }
+          }
+      - name: Compile actual installer EXE
+        shell: pwsh
+        run: |
+          $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          & $compiler 'installer\AegisPrime.iss'
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed" }
+          if (!(Test-Path 'installer\output\AegisPrimeSetup-x64.exe')) {
+            throw "Installer executable was not created"
+          }
+      - name: Verify installer hash
+        shell: pwsh
+        run: Get-FileHash installer/output/AegisPrimeSetup-x64.exe -Algorithm SHA256 | Format-List
+      - name: Upload runnable installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AegisPrime-Windows-Installer-x64
+          path: installer/output/AegisPrimeSetup-x64.exe
+          if-no-files-found: error
+      - name: Check actual installer into installer folder
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: |
+          Copy-Item installer/output/AegisPrimeSetup-x64.exe installer/AegisPrimeSetup-x64.exe -Force
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f installer/AegisPrimeSetup-x64.exe
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "build: refresh compiled Windows EXE installer [skip ci]"
+            if ($LASTEXITCODE -ne 0) { throw "Installer commit failed" }
+            git push origin HEAD:main
+            if ($LASTEXITCODE -ne 0) { throw "Could not publish installer EXE to repository" }
+          }
+      - name: Publish installer to versioned release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" installer/output/AegisPrimeSetup-x64.exe --title "Aegis Prime ${{ github.ref_name }}" --notes "Windows x64 installer. Unsigned preview build; review the README and release limitations."
