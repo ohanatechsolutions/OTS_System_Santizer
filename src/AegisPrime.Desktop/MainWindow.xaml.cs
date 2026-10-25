@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly QuarantineService _vault = new();
     private CancellationTokenSource? _scanCancellation;
     private bool _busy;
+    private bool _batchSelectingCleanup;
 
     public MainWindow()
     {
@@ -124,11 +125,17 @@ public partial class MainWindow : Window
         {
             var includeBrowser = BrowserCacheCheck.IsChecked == true;
             var items = await Task.Run(() => CleanupService.Discover(includeBrowser));
+            foreach (var row in _cleanup) row.PropertyChanged -= CleanupRow_PropertyChanged;
             _cleanup.Clear();
-            foreach (var item in items) _cleanup.Add(new CleanupRow(item));
+            foreach (var item in items)
+            {
+                var row = new CleanupRow(item);
+                row.PropertyChanged += CleanupRow_PropertyChanged;
+                _cleanup.Add(row);
+            }
             var total = items.Sum(x => x.SizeBytes);
             SpaceCount.Text = ToSize(total);
-            CleanupSelection.Text = items.Count.ToString("N0") + " candidates";
+            UpdateCleanupSelection();
             Log(items.Count + " eligible files totaling " + ToSize(total) +
                 ". Reported bytes are not guaranteed space reclaimed.");
         }
@@ -148,6 +155,37 @@ public partial class MainWindow : Window
         }
     }
 
+    private void SelectAllCleanup_Click(object sender, RoutedEventArgs e)
+    {
+        var selectAll = SelectAllCleanupCheck.IsChecked == true;
+        _batchSelectingCleanup = true;
+        try
+        {
+            foreach (var row in _cleanup) row.Selected = selectAll;
+        }
+        finally
+        {
+            _batchSelectingCleanup = false;
+        }
+        UpdateCleanupSelection();
+    }
+
+    private void CleanupRow_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(CleanupRow.Selected) && !_batchSelectingCleanup)
+            UpdateCleanupSelection();
+    }
+
+    private void UpdateCleanupSelection()
+    {
+        var count = _cleanup.Count;
+        var selected = _cleanup.Count(row => row.Selected);
+        SelectAllCleanupCheck.IsEnabled = count > 0;
+        // Show an indeterminate state when only some files have been checked manually.
+        SelectAllCleanupCheck.IsChecked = selected == 0 ? false : selected == count ? true : null;
+        CleanupSelection.Text = $"{selected:N0} of {count:N0} selected";
+    }
+
     private void DeleteChecked_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
@@ -161,7 +199,11 @@ public partial class MainWindow : Window
             return;
         var result = CleanupService.RemoveSelected(selected);
         foreach (var row in _cleanup.Where(x => x.Selected && !File.Exists(x.Path)).ToArray())
+        {
+            row.PropertyChanged -= CleanupRow_PropertyChanged;
             _cleanup.Remove(row);
+        }
+        UpdateCleanupSelection();
         SpaceCount.Text = ToSize(_cleanup.Sum(x => x.Candidate.SizeBytes));
         Log("Deleted " + result.Removed + " files; nominal sizes " + ToSize(result.BytesRemoved) +
             "; errors: " + result.Failures.Count);

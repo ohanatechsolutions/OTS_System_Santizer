@@ -85,6 +85,10 @@
        <Button Content="Analyze storage" Click="Analyze_Click"/>
        <CheckBox x:Name="BrowserCacheCheck" Content="Include browser cache (opt-in)"
         VerticalAlignment="Center" Foreground="#E0EAFA" Margin="4,0,16,0"/>
+       <CheckBox x:Name="SelectAllCleanupCheck" Content="Select all" IsEnabled="False"
+        VerticalAlignment="Center" Foreground="#E0EAFA" Margin="0,0,16,0"
+        Click="SelectAllCleanup_Click"
+        ToolTip="Select or clear all currently listed cleanup files. Permanent deletion still requires confirmation."/>
        <TextBlock x:Name="CleanupSelection" Text="" Foreground="#ACBED4" VerticalAlignment="Center"/>
       </StackPanel>
       <Button DockPanel.Dock="Right" Content="Delete checked files" Click="DeleteChecked_Click"

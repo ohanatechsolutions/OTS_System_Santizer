@@ -22,7 +22,7 @@ Developed by **Ohana Tech Solutions**. Open-source, offline-first, and free of s
 - **Deep Scan:** bounded multi-worker read-only inspection of fixed, accessible volumes, plus Microsoft Defender full scan when available.
 - **Findings:** evidence-first, source-labelled review items. Suspicious locations and double extensions are heuristics. They are not automatic infection verdicts.
 - **Installed applications:** inspect registered software, publisher, estimated size, uninstaller availability and missing install folder hints. Removal is delegated to Windows Settings.
-- **Space recovery:** discover old user Temp and CrashDumps files; optionally include Chrome/Edge default-profile cache. Files are **never selected for deletion automatically**.
+- **Space recovery:** discover old user Temp and CrashDumps files; optionally include Chrome/Edge default-profile cache. Files are **never selected for deletion automatically**. After analyzing storage, use **Select all** to check or uncheck every listed candidate at once; individual checkboxes remain editable and the selection count updates live.
 - **Delete checked files:** user-confirmed permanent deletion with stale-file checks, category allowlist and reparse-point checks. No raw WinSxS/Windows Installer deletion.
 - **Quarantine:** explicitly selected, accessible user-profile files may be moved to an app-local vault and restored. AES-256-GCM encryption with a unique Windows DPAPI user-wrapped key per item, integrity verification and explicit restore. This is **not kernel-enforced antivirus isolation** and does not protect against malware already running as the same user.
 
