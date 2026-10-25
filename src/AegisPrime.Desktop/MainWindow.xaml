@@ -54,7 +54,7 @@
       Foreground="#8CA9C9" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="12"/>
    </StackPanel>
   </Border>
-  <TabControl Grid.Row="6">
+  <TabControl x:Name="MainTabs" Grid.Row="6">
    <TabItem Header="Threat detection" IsSelected="True">
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -108,7 +108,7 @@
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
      <DockPanel Margin="4,8,0,10">
-      <TextBlock Text="User-profile quarantine only. Items are not encrypted; handle as potentially unsafe."
+      <TextBlock Text="User-scoped AES-256-GCM encrypted quarantine with Windows DPAPI. Not kernel-enforced."
         Foreground="#ACBED4" VerticalAlignment="Center"/>
       <Button Content="Restore selected file" DockPanel.Dock="Right" Click="Restore_Click"
        Background="#2A6B70" Margin="12,0,0,0"/>

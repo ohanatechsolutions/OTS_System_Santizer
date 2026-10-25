@@ -136,18 +136,10 @@ public partial class MainWindow : Window
         await AnalyzeAsync();
         if (_cleanup.Count > 0)
         {
-            MainTabsToCleanup();
+            MainTabs.SelectedIndex = 1;
             MessageBox.Show(this, "Review the cleanup list and check specific files before using Delete checked files. " +
                 "Aegis Prime never deletes items merely because you clicked Clean & Secure.",
                 "Review required", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-    }
-
-    private void MainTabsToCleanup()
-    {
-        if (CleanupList.Parent is DependencyObject)
-        {
-            // Intentionally leave tab selection to the user. No hidden operations.
         }
     }
 

@@ -39,7 +39,10 @@ try
     var vault = new QuarantineService(Path.Combine(temp, "vault"));
     Check(PathPolicy.CanQuarantine(fake), "User-profile file eligible for limited quarantine");
     var record = vault.Quarantine(fake);
-    Check(!File.Exists(fake) && File.Exists(record.VaultFile), "File moved into quarantine");
+    Check(!File.Exists(fake) && File.Exists(record.VaultFile), "Encrypted quarantine created");
+    Check(!System.Text.Encoding.UTF8.GetString(File.ReadAllBytes(record.VaultFile)).Contains("test fixture, not executable"),
+        "Vault does not contain source plaintext");
+    Check(!string.IsNullOrWhiteSpace(record.ProtectedKey), "Vault key is DPAPI-protected");
     Check(vault.List().Any(x => x.Id == record.Id), "Quarantine manifest discovered");
     vault.Restore(record);
     Check(File.Exists(fake) && !File.Exists(record.VaultFile), "Restore round-trip succeeds");

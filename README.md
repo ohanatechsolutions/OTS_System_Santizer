@@ -4,7 +4,7 @@
 
 Developed by **Ohana Tech Solutions**. Open-source, offline-first, and free of subscription requirements.
 
-> **Preview build 0.1.0.** Aegis Prime is **not a replacement for Microsoft Defender or another antivirus product**. Its own findings are local heuristics, not verified malware diagnoses. Scan coverage is limited by Windows access controls and antivirus availability. There is no kernel driver, protected-process bypass, scheduled-task inspector, generalized registry cleaner or encrypted quarantine vault in this build. Do not use this application as the sole basis for believing a system is safe.
+> **Preview build 0.1.0.** Aegis Prime is **not a replacement for Microsoft Defender or another antivirus product**. Its own findings are local heuristics, not verified malware diagnoses. Scan coverage is limited by Windows access controls and antivirus availability. There is no kernel driver, protected-process bypass, scheduled-task inspector, generalized registry cleaner or kernel-enforced quarantine vault in this build. Do not use this application as the sole basis for believing a system is safe.
 
 ## Download / install
 
@@ -22,7 +22,7 @@ Developed by **Ohana Tech Solutions**. Open-source, offline-first, and free of s
 - **Findings:** evidence-first, source-labelled review items. Suspicious locations and double extensions are heuristics. They are not automatic infection verdicts.
 - **Space recovery:** discover old user Temp and CrashDumps files; optionally include Chrome/Edge default-profile cache. Files are **never selected for deletion automatically**.
 - **Delete checked files:** user-confirmed permanent deletion with stale-file checks, category allowlist and reparse-point checks. No raw WinSxS/Windows Installer deletion.
-- **Quarantine:** explicitly selected, accessible user-profile files may be moved to an app-local vault and restored. Basic user-mode isolation only: the vault is **not encrypted or kernel protected**, and this is **not suitable for handling high-risk live malware**.
+- **Quarantine:** explicitly selected, accessible user-profile files may be moved to an app-local vault and restored. AES-256-GCM encryption with a unique Windows DPAPI user-wrapped key per item, integrity verification and explicit restore. This is **not kernel-enforced antivirus isolation** and does not protect against malware already running as the same user.
 
 **Clean & Secure** performs a quick inspection and discovers storage candidates, but it does **not** silently remediate or delete anything.
 

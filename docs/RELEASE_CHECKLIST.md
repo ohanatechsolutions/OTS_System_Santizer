@@ -9,7 +9,7 @@
 - [x] Itemized user-temp/crashdump/browser-cache discovery
 - [x] Size reporting and individually selected cleanup
 - [x] Confirmation and conservative path checks on deletion
-- [x] Basic manual quarantine and hash-verified restore
+- [x] AES-256-GCM encrypted manual quarantine, Windows DPAPI per-item key and hash-verified restore
 - [x] Inno Setup EXE installer automated by Windows GitHub Actions
 - [x] Local automated smoke tests
 - [x] Honest safety disclaimers and architecture documentation
@@ -17,7 +17,7 @@
 ## Not release-grade: verify before version 1.0
 - [ ] Independently verify clean builds on Windows 10 and Windows 11
 - [ ] Harden against all filesystem TOCTOU cases with handle-based checks
-- [ ] Proper restricted-ACL encrypted quarantine with recovery testing
+- [ ] Full ACL hardening, crash-recovery and hostile-process quarantine testing
 - [ ] Implement safe privileged remediation broker and UAC transaction protocol
 - [ ] Integrate reliable active antivirus provider health/detection records
 - [ ] Expand scheduled tasks, services, WMI persistence and accessible memory analysis

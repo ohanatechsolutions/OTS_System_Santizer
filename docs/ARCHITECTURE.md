@@ -13,12 +13,12 @@
 | DefenderIntegration | Invoke Defender `Start-MpScan` through static PowerShell arguments, await exit and report errors | Not guaranteed available/active; no independent AV verdict |
 | CleanupService | Discover age-qualified old files in user Temp/CrashDumps and opt-in browser cache | Estimates sum logical sizes; doesn't imply physical disk space will be reclaimed |
 | PathPolicy | Conservative full-path containment and reparse-point rejection | Not a kernel enforcement boundary; races remain possible |
-| QuarantineService | Rename/move selected user-profile file, SHA-256 manifest, verify on restore | Not encrypted; no malware-execution blocking guarantee |
+| QuarantineService | Move selected user-profile file to staging, AES-256-GCM stream encryption, DPAPI-wrapped key, SHA-256 verified restore | User-scoped, not kernel-enforced; same-user malware remains a threat |
 
 ## Future production hardening
 - Genuine Windows Security Center provider-status integration, verified Defender detection event ingestion, more complete persistence vectors and verified signature evaluation.
 - Authenticated, temporary elevated remediation broker with immutable action plans, user identity binding and handle-based target validation.
-- Encrypted restricted-ACL quarantine; transactional rollback; path-race and reparse adversarial tests.
+- Restricted-ACL hardening, crash-recovery of incomplete staging operations, transactional rollback; path-race and reparse adversarial tests.
 - Privacy-preserving SQLite history and structured exportable reports.
 - VM-based real Windows 10/11 malware-test fixtures, usability/accessibility audit, signed binaries.
 - Optional safely supported DISM/Windows-managed storage cleanup.

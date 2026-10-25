@@ -4,7 +4,7 @@ Aegis Prime is security-sensitive preview software. Report exploitable defects t
 
 ## Threat boundaries
 - No UI-level operation is an elevation broker; Windows system-level remediation is **not** implemented in preview.
-- The local vault is not encrypted; it is for manual review of low-confidence user files, not secure containment of high-risk malware.
+- Quarantine uses AES-256-GCM encrypted content and a DPAPI-wrapped per-item key; it is user-scoped and not kernel protected. Malware already running as the same user could potentially access decrypted content.
 - Automated detection is limited to supported Microsoft Defender invocations and described local heuristics; no on-access protections or kernel inspection.
 - Windows Defender can continue working after a cancelled `Start-MpScan` call.
 - File deletion is permanent after user selection and explicit consent. It does not provide undo.
