@@ -11,7 +11,8 @@ Developed by **Ohana Tech Solutions**. Open-source, offline-first, and free of s
 1. Open [Actions](https://github.com/ohanatechsolutions/Aegis_Prime/actions/workflows/windows-build.yml), select the latest **successful** Windows build, and download the `AegisPrime-Windows-Installer-x64` artifact.
 2. Extract the artifact ZIP and run `AegisPrimeSetup-x64.exe`.
 3. The build pipeline also places the compiled installer at [installer/AegisPrimeSetup-x64.exe](installer/AegisPrimeSetup-x64.exe) after a successful main-branch build when repository Actions write permission allows it.
-4. No paid tools are required to run the software. Builds are currently unsigned; Windows SmartScreen may warn. Verify the repository and published SHA-256 before installation.
+4. Verify the installer against [installer/AegisPrimeSetup-x64.sha256](installer/AegisPrimeSetup-x64.sha256) with Windows PowerShell: `(Get-FileHash .\\AegisPrimeSetup-x64.exe -Algorithm SHA256).Hash`.
+5. No paid tools are required to run the software. Builds are currently unsigned; Windows SmartScreen may warn. Verify the repository and published SHA-256 before installation.
 
 **Source installers:** `installer/AegisPrime.iss` is the Inno Setup project, **not** an executable. Use the compiled `.exe` for installation.
 

@@ -6,6 +6,7 @@ on:
     tags: ['v*']
     paths-ignore:
       - 'installer/AegisPrimeSetup-x64.exe'
+      - 'installer/AegisPrimeSetup-x64.sha256'
   pull_request:
   workflow_dispatch:
 
@@ -50,21 +51,45 @@ jobs:
           }
       - name: Verify installer hash
         shell: pwsh
-        run: Get-FileHash installer/output/AegisPrimeSetup-x64.exe -Algorithm SHA256 | Format-List
+        run: |
+          $hash = (Get-FileHash installer/output/AegisPrimeSetup-x64.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  AegisPrimeSetup-x64.exe" | Set-Content installer/output/AegisPrimeSetup-x64.sha256
+          Write-Host "Installer SHA-256: $hash"
+      - name: Verify install and uninstall using the actual EXE
+        shell: pwsh
+        run: |
+          $folder = Join-Path $env:RUNNER_TEMP 'AegisPrimeInstallSmoke'
+          $exe = (Resolve-Path 'installer/output/AegisPrimeSetup-x64.exe').Path
+          $parameters = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="' + $folder + '"'
+          $install = Start-Process -FilePath $exe -ArgumentList $parameters -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Installation failed, exit $($install.ExitCode)" }
+          if (!(Test-Path (Join-Path $folder 'AegisPrime.exe'))) {
+            throw "Installed application executable was not found"
+          }
+          $uninstaller = Join-Path $folder 'unins000.exe'
+          if (!(Test-Path $uninstaller)) { throw "Uninstaller was not created" }
+          $uninstall = Start-Process -FilePath $uninstaller -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($uninstall.ExitCode -ne 0) { throw "Uninstall failed, exit $($uninstall.ExitCode)" }
+          if (Test-Path (Join-Path $folder 'AegisPrime.exe')) {
+            throw "Application executable remains after uninstall"
+          }
       - name: Upload runnable installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: AegisPrime-Windows-Installer-x64
-          path: installer/output/AegisPrimeSetup-x64.exe
+          path: |
+            installer/output/AegisPrimeSetup-x64.exe
+            installer/output/AegisPrimeSetup-x64.sha256
           if-no-files-found: error
       - name: Check actual installer into installer folder
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: |
           Copy-Item installer/output/AegisPrimeSetup-x64.exe installer/AegisPrimeSetup-x64.exe -Force
+          Copy-Item installer/output/AegisPrimeSetup-x64.sha256 installer/AegisPrimeSetup-x64.sha256 -Force
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f installer/AegisPrimeSetup-x64.exe
+          git add -f installer/AegisPrimeSetup-x64.exe installer/AegisPrimeSetup-x64.sha256
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
             git commit -m "build: refresh compiled Windows EXE installer [skip ci]"
