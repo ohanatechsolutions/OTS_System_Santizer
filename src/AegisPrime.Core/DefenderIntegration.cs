@@ -52,7 +52,7 @@ public static class DefenderIntegration
         using var process = new Process { StartInfo = new ProcessStartInfo("powershell.exe")
             { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true } };
         const string command = "Get-MpThreatDetection -ErrorAction Stop | Sort-Object InitialDetectionTime -Descending | " +
-            "Select-Object -First 40 ThreatID,InitialDetectionTime,Resources | ConvertTo-Json -Compress -Depth 4";
+            "Select-Object -First 40 ThreatID,InitialDetectionTime,ThreatStatusID,ActionSuccess,Resources | ConvertTo-Json -Compress -Depth 4";
         foreach (var part in new[] { "-NoProfile", "-NonInteractive", "-Command", command })
             process.StartInfo.ArgumentList.Add(part);
         try
@@ -77,10 +77,21 @@ public static class DefenderIntegration
                 var id = item.TryGetProperty("ThreatID", out var i) ? i.ToString() : "unknown";
                 var resource = item.TryGetProperty("Resources", out var r) ? r.ToString() : "Not provided";
                 if (resource.Length > 700) resource = resource[..700];
-                findings.Add(new ThreatFinding(FindingSeverity.Information,
-                    "Defender detection history (past event)", "Microsoft Defender history",
-                    "Threat ID: " + id + "; resources: " + resource +
-                    ". Check Windows Security / Protection history for its current disposition.",
+                var statusId = item.TryGetProperty("ThreatStatusID", out var statusValue) &&
+                    statusValue.ValueKind == System.Text.Json.JsonValueKind.Number &&
+                    statusValue.TryGetInt32(out var parsedStatus) ? parsedStatus : 0;
+                var when = item.TryGetProperty("InitialDetectionTime", out var detected)
+                    ? detected.ToString() : "unknown";
+                var unresolved = statusId == 1 || statusId >= 101;
+                var allowed = statusId == 5;
+                var severity = unresolved ? FindingSeverity.High :
+                    allowed ? FindingSeverity.Medium : FindingSeverity.Information;
+                var title = unresolved ? "Microsoft Defender threat needs attention" :
+                    allowed ? "Previously allowed Defender detection" : "Defender detection record";
+                findings.Add(new ThreatFinding(severity,
+                    title, "Microsoft Defender detection status",
+                    "Threat ID: " + id + "; status ID: " + statusId + "; initial detection: " + when +
+                    "; resources: " + resource + ". Check Windows Security / Protection history.",
                     "Windows Security / Protection history", DateTimeOffset.Now));
             }
             return findings;
