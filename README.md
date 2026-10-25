@@ -21,12 +21,23 @@ Developed by **Ohana Tech Solutions**. Open-source, offline-first, and free of s
 - **Quick Scan:** read-only inspection of selected user startup/temporary/download paths, accessible process metadata and unusual Run/RunOnce, service and scheduled-task commands; also requests a Microsoft Defender quick scan where available.
 - **Deep Scan:** bounded multi-worker read-only inspection of fixed, accessible volumes, plus Microsoft Defender full scan when available.
 - **Findings:** evidence-first, source-labelled review items. Suspicious locations and double extensions are heuristics. They are not automatic infection verdicts.
+- **GitHub repositories (read-only):** connect multiple GitHub.com accounts with separate fine-grained personal access tokens; browse repository lists, folders and text-file previews without modifying code. Tokens are encrypted with Windows DPAPI in `%LOCALAPPDATA%\\AegisPrime\\github-accounts.json` and are accessible only to the current Windows user. This is a repository browser, **not yet an online security auditor**.
 - **Installed applications:** inspect registered software, publisher, estimated size, uninstaller availability and missing install folder hints. Removal is delegated to Windows Settings.
 - **Space recovery:** discover old user Temp and CrashDumps files; optionally include Chrome/Edge default-profile cache. Files are **never selected for deletion automatically**. After analyzing storage, use **Select all** to check or uncheck every listed candidate at once; individual checkboxes remain editable and the selection count updates live.
 - **Delete checked files:** user-confirmed permanent deletion with stale-file checks, category allowlist and reparse-point checks. No raw WinSxS/Windows Installer deletion.
 - **Quarantine:** explicitly selected, accessible user-profile files may be moved to an app-local vault and restored. AES-256-GCM encryption with a unique Windows DPAPI user-wrapped key per item, integrity verification and explicit restore. This is **not kernel-enforced antivirus isolation** and does not protect against malware already running as the same user.
 
 **Clean & Secure** performs a quick inspection and discovers storage candidates, but it does **not** silently remediate or delete anything.
+
+## Connecting multiple GitHub accounts
+
+1. In GitHub, go to **Settings → Developer settings → Personal access tokens → Fine-grained tokens**, and create a token for each GitHub account you want to connect. Limit it to the repositories you want Aegis Prime to read.
+2. Grant **Metadata: Read** (automatic for fine-grained tokens) and **Contents: Read** repository permissions. Do not grant write permissions or paste tokens into issues, source files or the Activity log. Some organizations require approval or SSO authorization to read private repositories.
+3. Open Aegis Prime's **GitHub repositories** tab. Paste one token into the masked field and click **Connect account**. The app verifies its owner using GitHub's authenticated user endpoint, then stores the credential encrypted on this Windows user profile.
+4. Repeat for the next account. Choose **All accounts** and **Refresh repositories** to see repositories from all connected accounts together, each labelled with its account. Select a repository → **Browse selected repository** → select a folder/file → **Open selected**.
+5. To remove an account, choose it in the Account menu and click **Disconnect selected**. This only removes local storage; revoke its token in GitHub Settings if it may have been compromised.
+
+Only HTTPS requests to the official `api.github.com` REST API are used. No OAuth client secret is required, and the app does not run `git push`, `git clone` or any write API operation. Individual folder listings are limited by GitHub's Contents API and text-file preview is limited to 1 MB. Authentication requires internet access; local scans remain offline-first. Account tokens remain valid until revoked/expired. **GitHub Copilot is not needed.**
 
 ## Build locally
 

@@ -36,6 +36,20 @@ try
     var removed = CleanupService.RemoveSelected(new[] { candidate });
     Check(removed.Removed == 1 && !File.Exists(cleanup), "Reviewed temp file can be removed");
 
+    var accountsPath = Path.Combine(temp, "github-accounts.json");
+    var accounts = new GitHubAccountStore(accountsPath);
+    const string fakeTokenOne = "test-only-not-a-real-github-credential-123";
+    const string fakeTokenTwo = "another-test-only-token-456";
+    accounts.Save("test-account-1", fakeTokenOne);
+    accounts.Save("test-account-2", fakeTokenTwo);
+    Check(accounts.Accounts.Count == 2, "Multiple GitHub account credentials stored");
+    Check(accounts.GetToken("test-account-1") == fakeTokenOne &&
+          accounts.GetToken("test-account-2") == fakeTokenTwo, "Windows DPAPI credential round-trip");
+    Check(!File.ReadAllText(accountsPath).Contains(fakeTokenOne), "GitHub credential not persisted in plaintext");
+    Check(accounts.Remove("test-account-1") &&
+          accounts.Accounts.Count == 1 && accounts.GetToken("test-account-2") == fakeTokenTwo,
+          "Disconnect only removes selected GitHub account");
+
     var vault = new QuarantineService(Path.Combine(temp, "vault"));
     Check(PathPolicy.CanQuarantine(fake), "User-profile file eligible for limited quarantine");
     var record = vault.Quarantine(fake);

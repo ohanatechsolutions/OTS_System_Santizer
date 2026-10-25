@@ -109,6 +109,75 @@
     </Grid>
    </TabItem>
 
+
+   <TabItem Header="GitHub repositories">
+    <Grid Margin="8">
+     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="130"/>
+     </Grid.RowDefinitions>
+     <TextBlock Grid.Row="0" Foreground="#ACBED4" Margin="4,5,0,10" TextWrapping="Wrap"
+      Text="Read-only GitHub access. Add a fine-grained personal access token for each account (Metadata: read; Contents: read). Credentials are encrypted for your Windows user; no browser sign-in required."/>
+     <WrapPanel Grid.Row="1" Margin="4,0,0,8" VerticalAlignment="Center">
+      <TextBlock Text="GitHub token:" VerticalAlignment="Center" Foreground="#E0EAFA" Margin="0,0,10,0"/>
+      <PasswordBox x:Name="GitHubToken" Width="270" Height="33" VerticalContentAlignment="Center"
+       Background="#1C2D47" Foreground="#F0F5FF" BorderBrush="#35516E" Margin="0,0,10,0"/>
+      <Button x:Name="GitHubConnectButton" Content="Connect account" Click="GitHubConnect_Click"/>
+      <Button x:Name="GitHubRemoveButton" Content="Disconnect selected" Click="GitHubRemove_Click" Background="#754453"/>
+      <Button x:Name="GitHubRefreshButton" Content="Refresh repositories" Click="GitHubRefresh_Click" Background="#2C557B"/>
+     </WrapPanel>
+     <DockPanel Grid.Row="2" Margin="4,0,0,8">
+      <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+       <TextBlock Text="Account:" VerticalAlignment="Center" Foreground="#E0EAFA" Margin="0,0,10,0"/>
+       <ComboBox x:Name="GitHubAccountSelector" Width="185" Height="29"
+        SelectionChanged="GitHubAccountSelector_SelectionChanged"/>
+      </StackPanel>
+      <TextBlock x:Name="GitHubStatus" Text="No accounts connected." Foreground="#9CB5D1"
+       TextWrapping="Wrap" VerticalAlignment="Center" Margin="16,0,0,0"/>
+     </DockPanel>
+     <Grid Grid.Row="3">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Grid Grid.Column="0">
+       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+       <DockPanel Margin="0,0,0,6">
+        <TextBlock Text="REPOSITORIES" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        <Button DockPanel.Dock="Right" x:Name="GitHubOpenRepoButton" Content="Browse selected repository"
+         Click="GitHubOpenRepo_Click" HorizontalAlignment="Right" Background="#285DAD"/>
+       </DockPanel>
+       <ListView x:Name="GitHubRepoList" Grid.Row="1">
+        <ListView.View><GridView>
+         <GridViewColumn Header="Account" Width="110" DisplayMemberBinding="{Binding Account}"/>
+         <GridViewColumn Header="Repository" Width="260" DisplayMemberBinding="{Binding FullName}"/>
+         <GridViewColumn Header="Visibility" Width="80" DisplayMemberBinding="{Binding Visibility}"/>
+        </GridView></ListView.View>
+       </ListView>
+      </Grid>
+      <Grid Grid.Column="2">
+       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+       <DockPanel Margin="0,0,0,6">
+        <TextBlock Text="REPOSITORY FILES" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+         <Button x:Name="GitHubUpButton" Content="Up folder" Click="GitHubUp_Click" Background="#2C557B"/>
+         <Button x:Name="GitHubOpenItemButton" Content="Open selected" Click="GitHubOpenItem_Click"/>
+        </StackPanel>
+       </DockPanel>
+       <ListView Grid.Row="1" x:Name="GitHubContentsList">
+        <ListView.View><GridView>
+         <GridViewColumn Header="Name" Width="285" DisplayMemberBinding="{Binding Name}"/>
+         <GridViewColumn Header="Type" Width="66" DisplayMemberBinding="{Binding Kind}"/>
+         <GridViewColumn Header="Size" Width="90" DisplayMemberBinding="{Binding SizeLabel}"/>
+        </GridView></ListView.View>
+       </ListView>
+      </Grid>
+     </Grid>
+     <TextBlock Grid.Row="4" x:Name="GitHubFilePath" Text="FILE PREVIEW (READ ONLY)" FontWeight="SemiBold"
+      Margin="2,10,0,6" TextTrimming="CharacterEllipsis"/>
+     <TextBox Grid.Row="5" x:Name="GitHubFilePreview" IsReadOnly="True" FontFamily="Consolas"
+      FontSize="12" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
+      HorizontalScrollBarVisibility="Auto" Background="#111D31" Foreground="#D7E6F9"
+      BorderBrush="#35516E" Padding="8"/>
+    </Grid>
+   </TabItem>
    <TabItem Header="Installed applications">
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>

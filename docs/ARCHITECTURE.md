@@ -15,6 +15,7 @@
 | CleanupService | Discover age-qualified old files in user Temp/CrashDumps and opt-in browser cache | Estimates sum logical sizes; doesn't imply physical disk space will be reclaimed |
 | PathPolicy | Conservative full-path containment and reparse-point rejection | Not a kernel enforcement boundary; races remain possible |
 | QuarantineService | Move selected user-profile file to staging, AES-256-GCM stream encryption, DPAPI-wrapped key, SHA-256 verified restore | User-scoped, not kernel-enforced; same-user malware remains a threat |
+| GitHubAccountStore / GitHubRepositoryReader | Store independently encrypted per-account credentials with DPAPI; list accessible GitHub.com repositories and read folder/text file contents via GitHub REST | Requires manually created read-only fine-grained tokens; does not yet audit dependencies, history or code for threats; no API write operations |
 
 ## Future production hardening
 - Genuine Windows Security Center provider-status integration, verified Defender detection event ingestion, more complete persistence vectors and verified signature evaluation.

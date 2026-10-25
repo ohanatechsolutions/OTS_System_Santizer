@@ -18,6 +18,13 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _scanCancellation;
     private bool _busy;
     private bool _batchSelectingCleanup;
+    private readonly GitHubAccountStore _gitHubStore = new();
+    private readonly ObservableCollection<GitHubRepository> _gitHubRepos = new();
+    private readonly ObservableCollection<GitHubDirectoryEntry> _gitHubContents = new();
+    private readonly List<GitHubRepository> _gitHubRepoCache = new();
+    private GitHubRepository? _gitHubCurrentRepo;
+    private string _gitHubCurrentPath = "";
+    private bool _gitHubBusy;
 
     public MainWindow()
     {
@@ -26,6 +33,10 @@ public partial class MainWindow : Window
         CleanupList.ItemsSource = _cleanup;
         QuarantineList.ItemsSource = _quarantine;
         InstalledAppList.ItemsSource = _apps;
+        GitHubRepoList.ItemsSource = _gitHubRepos;
+        GitHubContentsList.ItemsSource = _gitHubContents;
+        try { LoadGitHubAccounts(); }
+        catch (Exception ex) { GitHubStatus.Text = "Account store error: " + ex.Message; }
         RefreshVault();
         Log("Application started; no threats assumed absent until relevant scans complete.");
     }
@@ -212,6 +223,189 @@ public partial class MainWindow : Window
                 "Some files could not be removed", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
+
+
+    private void LoadGitHubAccounts(string? desired = null)
+    {
+        var chosen = desired ?? GitHubAccountSelector.SelectedItem as string ?? "All accounts";
+        GitHubAccountSelector.ItemsSource = null;
+        var items = new List<string> { "All accounts" };
+        items.AddRange(_gitHubStore.Accounts);
+        GitHubAccountSelector.ItemsSource = items;
+        GitHubAccountSelector.SelectedItem = items.Contains(chosen) ? chosen : "All accounts";
+        GitHubStatus.Text = _gitHubStore.Accounts.Count + " connected GitHub account(s).";
+    }
+
+    private void GitHubAccountSelector_SelectionChanged(object sender,
+        System.Windows.Controls.SelectionChangedEventArgs e) => FilterGitHubRepositories();
+
+    private void FilterGitHubRepositories()
+    {
+        if (GitHubRepoList is null) return;
+        var filter = GitHubAccountSelector.SelectedItem as string;
+        _gitHubRepos.Clear();
+        foreach (var item in _gitHubRepoCache.Where(repo =>
+            filter is null or "All accounts" ||
+            repo.Account.Equals(filter, StringComparison.OrdinalIgnoreCase)))
+            _gitHubRepos.Add(item);
+        _gitHubContents.Clear();
+        _gitHubCurrentRepo = null;
+        _gitHubCurrentPath = "";
+        GitHubFilePreview.Clear();
+        GitHubFilePath.Text = "FILE PREVIEW (READ ONLY)";
+    }
+
+    private void SetGitHubBusy(bool busy)
+    {
+        _gitHubBusy = busy;
+        GitHubConnectButton.IsEnabled = !busy;
+        GitHubRemoveButton.IsEnabled = !busy;
+        GitHubRefreshButton.IsEnabled = !busy;
+        GitHubOpenRepoButton.IsEnabled = !busy;
+        GitHubOpenItemButton.IsEnabled = !busy;
+        GitHubUpButton.IsEnabled = !busy;
+    }
+
+    private async void GitHubConnect_Click(object sender, RoutedEventArgs e)
+    {
+        if (_gitHubBusy) return;
+        var token = GitHubToken.Password.Trim();
+        GitHubToken.Clear();
+        if (token.Length == 0)
+        {
+            MessageBox.Show(this, "Create a fine-grained GitHub token with repository Metadata and Contents read permissions, then paste it here.");
+            return;
+        }
+        SetGitHubBusy(true);
+        GitHubStatus.Text = "Verifying GitHub credential...";
+        try
+        {
+            var login = await GitHubRepositoryReader.VerifyAccountAsync(token);
+            if (_gitHubStore.Contains(login) && MessageBox.Show(this,
+                "Replace the stored credential for GitHub account " + login + "?",
+                "Replace account credential", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
+            _gitHubStore.Save(login, token);
+            LoadGitHubAccounts(login);
+            GitHubStatus.Text = "Connected @" + login + ". Refresh repositories to load access.";
+            Log("GitHub account connected: @" + login + ". Credential stored encrypted locally.");
+        }
+        catch (Exception ex)
+        {
+            GitHubStatus.Text = "Could not connect account: " + ex.Message;
+        }
+        finally { SetGitHubBusy(false); }
+    }
+
+    private void GitHubRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (_gitHubBusy) return;
+        var login = GitHubAccountSelector.SelectedItem as string;
+        if (string.IsNullOrEmpty(login) || login == "All accounts")
+        {
+            MessageBox.Show(this, "Choose one account from the Account menu first.");
+            return;
+        }
+        if (MessageBox.Show(this, "Disconnect @" + login +
+            " from this PC? This removes its locally saved credential. It does not revoke the token on GitHub.",
+            "Disconnect GitHub account", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+        try
+        {
+            _gitHubStore.Remove(login);
+            _gitHubRepoCache.RemoveAll(x => x.Account.Equals(login, StringComparison.OrdinalIgnoreCase));
+            LoadGitHubAccounts();
+            FilterGitHubRepositories();
+            Log("Removed locally stored GitHub credential for @" + login + ".");
+        }
+        catch (Exception ex) { GitHubStatus.Text = "Could not disconnect: " + ex.Message; }
+    }
+
+    private async void GitHubRefresh_Click(object sender, RoutedEventArgs e)
+    {
+        if (_gitHubBusy) return;
+        SetGitHubBusy(true);
+        try
+        {
+            var connected = _gitHubStore.Accounts;
+            var fetched = new List<GitHubRepository>();
+            var errors = new List<string>();
+            foreach (var account in connected)
+            {
+                GitHubStatus.Text = "Loading repositories for @" + account + "...";
+                try
+                {
+                    var token = _gitHubStore.GetToken(account);
+                    fetched.AddRange(await GitHubRepositoryReader.ListRepositoriesAsync(account, token));
+                }
+                catch (Exception ex) { errors.Add("@" + account + ": " + ex.Message); }
+            }
+            _gitHubRepoCache.Clear();
+            _gitHubRepoCache.AddRange(fetched.OrderBy(x => x.FullName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.Account));
+            FilterGitHubRepositories();
+            GitHubStatus.Text = fetched.Count + " repositories across " + connected.Count +
+                " account(s)." + (errors.Count > 0 ? " Errors: " + string.Join(" | ", errors) : "");
+        }
+        finally { SetGitHubBusy(false); }
+    }
+
+    private async void GitHubOpenRepo_Click(object sender, RoutedEventArgs e)
+    {
+        if (_gitHubBusy || GitHubRepoList.SelectedItem is not GitHubRepository repo) return;
+        _gitHubCurrentRepo = repo;
+        await OpenGitHubFolderAsync("");
+    }
+
+    private async void GitHubOpenItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_gitHubBusy || _gitHubCurrentRepo is null ||
+            GitHubContentsList.SelectedItem is not GitHubDirectoryEntry entry) return;
+        if (entry.Type == "dir")
+        {
+            await OpenGitHubFolderAsync(entry.Path);
+            return;
+        }
+        SetGitHubBusy(true);
+        try
+        {
+            GitHubFilePath.Text = _gitHubCurrentRepo.FullName + "/" + entry.Path + " (read only)";
+            GitHubFilePreview.Text = await GitHubRepositoryReader.ReadTextFileAsync(_gitHubCurrentRepo,
+                entry.Path, _gitHubStore.GetToken(_gitHubCurrentRepo.Account));
+        }
+        catch (Exception ex)
+        {
+            GitHubFilePreview.Text = "Cannot preview file: " + ex.Message;
+        }
+        finally { SetGitHubBusy(false); }
+    }
+
+    private async void GitHubUp_Click(object sender, RoutedEventArgs e)
+    {
+        if (_gitHubBusy || _gitHubCurrentRepo is null || _gitHubCurrentPath.Length == 0) return;
+        var index = _gitHubCurrentPath.LastIndexOf('/');
+        await OpenGitHubFolderAsync(index < 0 ? "" : _gitHubCurrentPath[..index]);
+    }
+
+    private async Task OpenGitHubFolderAsync(string path)
+    {
+        if (_gitHubBusy || _gitHubCurrentRepo is null) return;
+        SetGitHubBusy(true);
+        try
+        {
+            var contents = await GitHubRepositoryReader.ListContentsAsync(_gitHubCurrentRepo, path,
+                _gitHubStore.GetToken(_gitHubCurrentRepo.Account));
+            _gitHubCurrentPath = path;
+            _gitHubContents.Clear();
+            foreach (var item in contents) _gitHubContents.Add(item);
+            GitHubFilePath.Text = _gitHubCurrentRepo.FullName + "/" + path + " — Select a file to preview";
+            GitHubFilePreview.Clear();
+            GitHubStatus.Text = "Browsing @" + _gitHubCurrentRepo.Account + ": " +
+                _gitHubCurrentRepo.FullName + " (" + contents.Count + " items).";
+        }
+        catch (Exception ex) { GitHubStatus.Text = "Cannot browse repository: " + ex.Message; }
+        finally { SetGitHubBusy(false); }
+    }
 
     private async void RefreshApps_Click(object sender, RoutedEventArgs e)
     {
