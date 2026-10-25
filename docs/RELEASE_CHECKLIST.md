@@ -4,7 +4,9 @@
 - [x] WPF desktop dashboard for Windows x64
 - [x] Quick/Deep scan actions, progress and cancellation
 - [x] Bounded multi-threaded recursive file inspection
-- [x] Process and Run/RunOnce autorun anomaly inspection
+- [x] Process and Run/RunOnce, service and readable scheduled-task anomaly inspection
+- [x] Historical Defender detection records clearly labeled as past events
+- [x] Installed applications registry inventory
 - [x] Microsoft Defender on-demand scan invocation with failure reporting
 - [x] Itemized user-temp/crashdump/browser-cache discovery
 - [x] Size reporting and individually selected cleanup
