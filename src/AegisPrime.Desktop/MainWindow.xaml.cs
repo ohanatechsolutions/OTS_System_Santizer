@@ -78,6 +78,8 @@ public partial class MainWindow : Window
             }
             catch (OperationCanceledException) { }
             var antivirus = await defenderTask;
+            foreach (var pastDetection in await DefenderIntegration.GetDetectionHistoryAsync(token))
+                _findings.Add(pastDetection);
             FindingCount.Text = _findings.Count.ToString("N0");
             ScanStatus.Text = report.Cancelled ? "Inspection cancelled: report is partial."
                 : "Inspection finished. Review findings and antivirus coverage.";
