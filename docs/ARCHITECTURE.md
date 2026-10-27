@@ -1,10 +1,10 @@
-# Aegis Prime architecture — implementation map
+# OTS System Sanitizer architecture — implementation map
 
 ## UI process
-`src/AegisPrime.Desktop`: WPF XAML + code-behind state management. Runs unelevated by default, keeps scan work asynchronous, presents evidence and asks for explicit confirmation before any destructive action. Custom shield icon and About/footer subtly credit Ohana Tech Solutions.
+`src/OTSSystemSanitizer.Desktop`: WPF XAML + code-behind state management. Runs unelevated by default, keeps scan work asynchronous, presents evidence and asks for explicit confirmation before any destructive action. Custom shield icon and About/footer subtly credit Ohana Tech Solutions.
 
 ## Core services
-`src/AegisPrime.Core` is Windows-targeted and has no third-party package dependencies.
+`src/OTSSystemSanitizer.Core` is Windows-targeted and has no third-party package dependencies.
 
 | Service | Responsibility | Trust limitations |
 | --- | --- | --- |
@@ -26,3 +26,7 @@
 - Optional safely supported DISM/Windows-managed storage cleanup.
 
 **Safety invariant:** do not label a heuristic as confirmed malware and do not automatically delete critical system files.
+
+## Product rename compatibility
+
+The customer-visible product name, namespaces, project names, executable, installer and release artifacts use **OTS System Sanitizer**. Existing encrypted user data is not discarded: the previous user-data directory remains readable if present. The original Inno Setup AppId and quarantine file format magic remain unchanged for backward compatibility.

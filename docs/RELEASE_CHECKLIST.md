@@ -1,7 +1,9 @@
-# Release readiness checklist
+# OTS System Sanitizer — release readiness checklist
 
-## Included in preview
+## Included in preview (v0.2.0)
 - [x] WPF desktop dashboard for Windows x64
+- [x] Rebranded app, binaries, namespaces, icon resource and installer with unchanged upgrade AppId
+- [x] Legacy quarantine and encrypted account-storage compatibility
 - [x] Quick/Deep scan actions, progress and cancellation
 - [x] Bounded multi-threaded recursive file inspection
 - [x] Process and Run/RunOnce, service and readable scheduled-task anomaly inspection

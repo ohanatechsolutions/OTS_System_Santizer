@@ -1,12 +1,12 @@
-name: Windows build, smoke tests and real EXE installer
+name: OTS System Sanitizer — Windows build, tests and installer
 
 on:
   push:
     branches: [main]
     tags: ['v*']
     paths-ignore:
-      - 'installer/AegisPrimeSetup-x64.exe'
-      - 'installer/AegisPrimeSetup-x64.sha256'
+      - 'installer/OTSSystemSanitizerSetup-x64.exe'
+      - 'installer/OTSSystemSanitizerSetup-x64.sha256'
   pull_request:
   workflow_dispatch:
 
@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: aegis-windows-${{ github.ref }}
+  group: ots-sanitizer-windows-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -27,12 +27,24 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Verify rebranded repository file paths
+        shell: pwsh
+        run: |
+          $oldNames = git ls-files | Where-Object { $_ -match 'AegisPrime|Aegis_Prime' }
+          if ($oldNames) { throw "Unexpected old application paths: $($oldNames -join ', ')" }
       - name: Compile application
-        run: dotnet build src/AegisPrime.Desktop/AegisPrime.Desktop.csproj --configuration Release --nologo
+        run: dotnet build src/OTSSystemSanitizer.Desktop/OTSSystemSanitizer.Desktop.csproj --configuration Release --nologo
+      - name: Check executable publisher metadata
+        shell: pwsh
+        run: |
+          $app = Get-Item 'src/OTSSystemSanitizer.Desktop/bin/Release/net10.0-windows/OTSSystemSanitizer.exe'
+          if ($app.VersionInfo.ProductName -ne 'OTS System Sanitizer') {
+            throw "Unexpected product metadata: $($app.VersionInfo.ProductName)"
+          }
       - name: Verify cleanup and quarantine policies
-        run: dotnet run --project tests/AegisPrime.SmokeTests/AegisPrime.SmokeTests.csproj --configuration Release
+        run: dotnet run --project tests/OTSSystemSanitizer.SmokeTests/OTSSystemSanitizer.SmokeTests.csproj --configuration Release
       - name: Publish Windows x64 native desktop application
-        run: dotnet publish src/AegisPrime.Desktop/AegisPrime.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false --output artifacts/publish
+        run: dotnet publish src/OTSSystemSanitizer.Desktop/OTSSystemSanitizer.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false --output artifacts/publish
       - name: Install Inno Setup compiler
         shell: pwsh
         run: |
@@ -44,52 +56,52 @@ jobs:
         shell: pwsh
         run: |
           $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
-          & $compiler 'installer\AegisPrime.iss'
+          & $compiler 'installer\OTSSystemSanitizer.iss'
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed" }
-          if (!(Test-Path 'installer\output\AegisPrimeSetup-x64.exe')) {
+          if (!(Test-Path 'installer\output\OTSSystemSanitizerSetup-x64.exe')) {
             throw "Installer executable was not created"
           }
       - name: Verify installer hash
         shell: pwsh
         run: |
-          $hash = (Get-FileHash installer/output/AegisPrimeSetup-x64.exe -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  AegisPrimeSetup-x64.exe" | Set-Content installer/output/AegisPrimeSetup-x64.sha256
+          $hash = (Get-FileHash installer/output/OTSSystemSanitizerSetup-x64.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  OTSSystemSanitizerSetup-x64.exe" | Set-Content installer/output/OTSSystemSanitizerSetup-x64.sha256
           Write-Host "Installer SHA-256: $hash"
       - name: Verify install and uninstall using the actual EXE
         shell: pwsh
         run: |
-          $folder = Join-Path $env:RUNNER_TEMP 'AegisPrimeInstallSmoke'
-          $exe = (Resolve-Path 'installer/output/AegisPrimeSetup-x64.exe').Path
+          $folder = Join-Path $env:RUNNER_TEMP 'OTSSystemSanitizerInstallSmoke'
+          $exe = (Resolve-Path 'installer/output/OTSSystemSanitizerSetup-x64.exe').Path
           $parameters = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="' + $folder + '"'
           $install = Start-Process -FilePath $exe -ArgumentList $parameters -Wait -PassThru
           if ($install.ExitCode -ne 0) { throw "Installation failed, exit $($install.ExitCode)" }
-          if (!(Test-Path (Join-Path $folder 'AegisPrime.exe'))) {
+          if (!(Test-Path (Join-Path $folder 'OTSSystemSanitizer.exe'))) {
             throw "Installed application executable was not found"
           }
           $uninstaller = Join-Path $folder 'unins000.exe'
           if (!(Test-Path $uninstaller)) { throw "Uninstaller was not created" }
           $uninstall = Start-Process -FilePath $uninstaller -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
           if ($uninstall.ExitCode -ne 0) { throw "Uninstall failed, exit $($uninstall.ExitCode)" }
-          if (Test-Path (Join-Path $folder 'AegisPrime.exe')) {
+          if (Test-Path (Join-Path $folder 'OTSSystemSanitizer.exe')) {
             throw "Application executable remains after uninstall"
           }
       - name: Upload runnable installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AegisPrime-Windows-Installer-x64
+          name: OTSSystemSanitizer-Windows-Installer-x64
           path: |
-            installer/output/AegisPrimeSetup-x64.exe
-            installer/output/AegisPrimeSetup-x64.sha256
+            installer/output/OTSSystemSanitizerSetup-x64.exe
+            installer/output/OTSSystemSanitizerSetup-x64.sha256
           if-no-files-found: error
       - name: Check actual installer into installer folder
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: |
-          Copy-Item installer/output/AegisPrimeSetup-x64.exe installer/AegisPrimeSetup-x64.exe -Force
-          Copy-Item installer/output/AegisPrimeSetup-x64.sha256 installer/AegisPrimeSetup-x64.sha256 -Force
+          Copy-Item installer/output/OTSSystemSanitizerSetup-x64.exe installer/OTSSystemSanitizerSetup-x64.exe -Force
+          Copy-Item installer/output/OTSSystemSanitizerSetup-x64.sha256 installer/OTSSystemSanitizerSetup-x64.sha256 -Force
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f installer/AegisPrimeSetup-x64.exe installer/AegisPrimeSetup-x64.sha256
+          git add -f installer/OTSSystemSanitizerSetup-x64.exe installer/OTSSystemSanitizerSetup-x64.sha256
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
             git commit -m "build: refresh compiled Windows EXE installer [skip ci]"
@@ -103,4 +115,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" installer/output/AegisPrimeSetup-x64.exe --title "Aegis Prime ${{ github.ref_name }}" --notes "Windows x64 installer. Unsigned preview build; review the README and release limitations."
+          gh release create "${{ github.ref_name }}" installer/output/OTSSystemSanitizerSetup-x64.exe --title "OTS System Sanitizer ${{ github.ref_name }}" --notes "Windows x64 installer. Unsigned preview build; review the README and release limitations."

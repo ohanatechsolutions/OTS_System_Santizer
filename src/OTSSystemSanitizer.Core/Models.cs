@@ -1,4 +1,4 @@
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 public enum ScanMode { Quick, Deep }
 public enum FindingSeverity { High, Medium, Low, Information }

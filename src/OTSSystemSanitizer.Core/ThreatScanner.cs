@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Threading.Channels;
 
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 /// <summary>Bounded, read-only filesystem analysis; findings are heuristics, never AV verdicts.</summary>
 public static class ThreatScanner

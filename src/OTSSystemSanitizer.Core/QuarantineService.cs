@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 /// <summary>
 /// User-scoped, AES-256-GCM encrypted vault. Per-item keys are wrapped with Windows DPAPI
@@ -13,13 +13,18 @@ namespace AegisPrime.Core;
 public sealed class QuarantineService
 {
     private const int ChunkSize = 1024 * 1024;
+    // Existing encrypted quarantine files use this permanent on-disk magic; do not change it for a rebrand.
     private static readonly byte[] Magic = Encoding.ASCII.GetBytes("AEGISQ2!");
     private readonly string _root;
 
     public QuarantineService(string? root = null)
     {
-        _root = root ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "AegisPrime", "Quarantine");
+        var dataRoot = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var current = Path.Combine(dataRoot, "OTSSystemSanitizer", "Quarantine");
+        var legacy = Path.Combine(dataRoot, "AegisPrime", "Quarantine");
+        // Absolute vault paths are stored in old encrypted manifests. Keep the old vault
+        // in place for existing installations rather than breaking restore during a rebrand.
+        _root = root ?? (Directory.Exists(legacy) ? legacy : current);
         Directory.CreateDirectory(_root);
     }
 
@@ -211,7 +216,7 @@ internal static class Dpapi
         {
             Marshal.Copy(data, 0, input.Data, data.Length);
             var ok = protect
-                ? CryptProtectData(ref input, "Aegis Prime quarantine key", IntPtr.Zero,
+                ? CryptProtectData(ref input, "OTS System Sanitizer quarantine key", IntPtr.Zero,
                     IntPtr.Zero, IntPtr.Zero, 1, out output)
                 : CryptUnprotectData(ref input, IntPtr.Zero, IntPtr.Zero,
                     IntPtr.Zero, IntPtr.Zero, 1, out output);

@@ -4,9 +4,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using AegisPrime.Core;
+using OTSSystemSanitizer.Core;
 
-namespace AegisPrime.Desktop;
+namespace OTSSystemSanitizer.Desktop;
 
 public partial class MainWindow : Window
 {
@@ -161,7 +161,7 @@ public partial class MainWindow : Window
         {
             MainTabs.SelectedIndex = 1;
             MessageBox.Show(this, "Review the cleanup list and check specific files before using Delete checked files. " +
-                "Aegis Prime never deletes items merely because you clicked Clean & Secure.",
+                "OTS System Sanitizer never deletes items merely because you clicked Clean & Secure.",
                 "Review required", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }

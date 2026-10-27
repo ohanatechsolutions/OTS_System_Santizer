@@ -1,4 +1,4 @@
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 /// <summary>User-profile-only cleanup. Never directly deletes Windows servicing/cache directories.</summary>
 public static class CleanupService

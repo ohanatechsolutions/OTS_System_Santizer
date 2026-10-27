@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 /// <summary>Uses the installed Windows Defender cmdlets. A failed invocation is never reported as clean.</summary>
 public static class DefenderIntegration
@@ -39,7 +39,7 @@ public static class DefenderIntegration
         }
         catch (OperationCanceledException)
         {
-            return "Aegis Prime stopped waiting for Defender. Defender may continue scanning independently.";
+            return "OTS System Sanitizer stopped waiting for Defender. Defender may continue scanning independently.";
         }
         catch (Exception ex)
         {

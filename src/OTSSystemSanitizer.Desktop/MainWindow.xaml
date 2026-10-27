@@ -1,7 +1,7 @@
-<Window x:Class="AegisPrime.Desktop.MainWindow"
+<Window x:Class="OTSSystemSanitizer.Desktop.MainWindow"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- Title="Aegis Prime — Security and Storage" Height="800" Width="1240"
+ Title="OTS System Sanitizer — Security and Storage" Height="800" Width="1240"
  MinHeight="680" MinWidth="1000" WindowStartupLocation="CenterScreen">
  <Grid Margin="28">
   <Grid.RowDefinitions>
@@ -14,7 +14,7 @@
     <TextBlock Text="⬡" FontSize="37" Foreground="#9CCBFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
    </Border>
    <StackPanel>
-    <TextBlock Text="AEGIS PRIME" FontWeight="Bold" FontSize="27"/>
+    <TextBlock Text="OTS SYSTEM SANITIZER" FontWeight="Bold" FontSize="27"/>
     <TextBlock Text="Windows security inspection and safe space recovery" Foreground="#A3B8D3" FontSize="13" Margin="0,5,0,0"/>
    </StackPanel>
   </DockPanel>
@@ -50,7 +50,7 @@
     <TextBlock x:Name="ScanStatus" Text="Ready. No scan has been completed." Foreground="#C4D2E7" TextWrapping="Wrap"/>
     <ProgressBar x:Name="ScanBar" Height="8" Margin="0,12,0,0"
       Background="#0E192B" Foreground="#5FA0F5" IsIndeterminate="False"/>
-    <TextBlock x:Name="CoverageStatus" Text="Aegis Prime uses local heuristics and Microsoft Defender when available. It is not a standalone antivirus."
+    <TextBlock x:Name="CoverageStatus" Text="OTS System Sanitizer uses local heuristics and Microsoft Defender when available. It is not a standalone antivirus."
       Foreground="#8CA9C9" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="12"/>
    </StackPanel>
   </Border>
@@ -229,7 +229,7 @@
   </TabControl>
   <DockPanel Grid.Row="7" Margin="2,12,0,0">
    <TextBlock Text="Ohana Tech Solutions" FontSize="11" Foreground="#839AB4" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
-   <TextBlock Text="Windows 10/11 x64  •  Offline-first  •  No automatic deletion  •  v0.1"
+   <TextBlock Text="Windows 10/11 x64  •  Offline-first  •  No automatic deletion  •  v0.2"
     FontSize="11" Foreground="#839AB4"/>
   </DockPanel>
  </Grid>

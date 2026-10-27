@@ -1,6 +1,6 @@
 using Microsoft.Win32;
 
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 public sealed record InstalledApp(string Name, string Publisher, string Version, string InstallLocation,
     string UninstallCommand, long EstimatedBytes, string Status)

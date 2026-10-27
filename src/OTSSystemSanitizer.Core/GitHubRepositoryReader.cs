@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 /// <summary>
 /// Multiple independent GitHub credentials, encrypted using Windows DPAPI for the current
@@ -18,7 +18,14 @@ public sealed class GitHubAccountStore
     {
         _file = path ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "AegisPrime", "github-accounts.json");
+            "OTSSystemSanitizer", "github-accounts.json");
+        // Retain access to encrypted tokens saved by earlier installed versions.
+        if (path is null)
+        {
+            var legacy = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "AegisPrime", "github-accounts.json");
+            if (File.Exists(legacy) && !File.Exists(_file)) _file = legacy;
+        }
     }
 
     public IReadOnlyList<string> Accounts => Load().Keys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray();
@@ -210,7 +217,7 @@ public static class GitHubRepositoryReader
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         request.Headers.TryAddWithoutValidation("X-GitHub-Api-Version", "2022-11-28");
-        request.Headers.UserAgent.ParseAdd("AegisPrime/0.1");
+        request.Headers.UserAgent.ParseAdd("OTSSystemSanitizer/0.2");
         using var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel);
         if (!response.IsSuccessStatusCode)
         {

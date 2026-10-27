@@ -1,4 +1,4 @@
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 /// <summary>Conservative path rules. These checks are not a privileged security boundary.</summary>
 public static class PathPolicy
@@ -41,7 +41,8 @@ public static class PathPolicy
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         if (IsWithin(path, windows) || IsWithin(path, programFiles) || IsWithin(path, programFilesX86)) return false;
-        if (IsWithin(path, Path.Combine(appData, "AegisPrime"))) return false;
+        if (IsWithin(path, Path.Combine(appData, "OTSSystemSanitizer")) ||
+            IsWithin(path, Path.Combine(appData, "AegisPrime"))) return false; // Legacy vault protection
         return IsWithin(path, profile) && File.Exists(path) && !IsReparsePoint(path);
     }
 }

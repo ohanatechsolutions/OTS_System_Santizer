@@ -3,7 +3,7 @@ using System.Xml.Linq;
 using System.Diagnostics;
 using Microsoft.Win32;
 
-namespace AegisPrime.Core;
+namespace OTSSystemSanitizer.Core;
 
 /// <summary>Inventory of inspectable process and autorun references, not a rootkit detector.</summary>
 public static class PersistenceInspector

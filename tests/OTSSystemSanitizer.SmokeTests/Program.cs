@@ -1,4 +1,4 @@
-using AegisPrime.Core;
+using OTSSystemSanitizer.Core;
 using System.Text;
 
 static void Check(bool result, string message)
@@ -7,8 +7,8 @@ static void Check(bool result, string message)
     Console.WriteLine("PASS: " + message);
 }
 
-Console.WriteLine("Aegis Prime local policy and recovery smoke tests.");
-var temp = Path.Combine(Path.GetTempPath(), "AegisPrimeTest-" + Guid.NewGuid().ToString("N"));
+Console.WriteLine("OTS System Sanitizer local policy and recovery smoke tests.");
+var temp = Path.Combine(Path.GetTempPath(), "OTSSystemSanitizerTest-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(temp);
 try
 {

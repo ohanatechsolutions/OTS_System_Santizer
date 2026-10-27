@@ -7,6 +7,6 @@
   <ImplicitUsings>enable</ImplicitUsings>
  </PropertyGroup>
  <ItemGroup>
-  <ProjectReference Include="../../src/AegisPrime.Core/AegisPrime.Core.csproj"/>
+  <ProjectReference Include="../../src/OTSSystemSanitizer.Core/OTSSystemSanitizer.Core.csproj"/>
  </ItemGroup>
 </Project>

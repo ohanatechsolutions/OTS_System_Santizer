@@ -1,6 +1,6 @@
 # Security policy
 
-Aegis Prime is security-sensitive preview software. Report exploitable defects through the repository's private vulnerability reporting mechanism or privately contact the maintainer. Do not post exploit details or live malware samples in public issues.
+OTS System Sanitizer is security-sensitive preview software. Report exploitable defects through the repository's private vulnerability reporting mechanism or privately contact the maintainer. Do not post exploit details or live malware samples in public issues.
 
 ## Threat boundaries
 - No UI-level operation is an elevation broker; Windows system-level remediation is **not** implemented in preview.

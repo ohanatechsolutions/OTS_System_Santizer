@@ -1,3 +1,3 @@
 using System.Windows;
-namespace AegisPrime.Desktop;
+namespace OTSSystemSanitizer.Desktop;
 public partial class App : Application { }
