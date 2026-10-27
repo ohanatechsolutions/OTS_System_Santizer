@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Windows.Threading;
 using System.IO;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -10,7 +11,7 @@ namespace OTSSystemSanitizer.Desktop;
 
 public partial class MainWindow : Window
 {
-    private readonly ObservableCollection<ThreatFinding> _findings = new();
+    private readonly ObservableCollection<ThreatRow> _findings = new();
     private readonly ObservableCollection<CleanupRow> _cleanup = new();
     private readonly ObservableCollection<QuarantinedFile> _quarantine = new();
     private readonly ObservableCollection<InstalledApp> _apps = new();
@@ -18,6 +19,11 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _scanCancellation;
     private bool _busy;
     private bool _batchSelectingCleanup;
+    private bool _batchSelectingThreats;
+    private bool _remediating;
+    private string? _investigatedId;
+    private readonly Stopwatch _searchStopwatch = new();
+    private readonly DispatcherTimer _searchTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly GitHubAccountStore _gitHubStore = new();
     private readonly ObservableCollection<GitHubRepository> _gitHubRepos = new();
     private readonly ObservableCollection<GitHubDirectoryEntry> _gitHubContents = new();
@@ -30,6 +36,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         ThreatList.ItemsSource = _findings;
+        _searchTimer.Tick += (_, _) => UpdateSearchTimer();
+        UpdateThreatSelection();
         CleanupList.ItemsSource = _cleanup;
         QuarantineList.ItemsSource = _quarantine;
         InstalledAppList.ItemsSource = _apps;
@@ -53,7 +61,43 @@ public partial class MainWindow : Window
         QuickButton.IsEnabled = !busy;
         DeepButton.IsEnabled = !busy;
         CancelButton.IsEnabled = busy;
+        UpdateThreatSelection();
         CleanAndSecureButton.IsEnabled = !busy;
+    }
+
+    private void UpdateSearchTimer() =>
+        ElapsedSearchTime.Text = "Search duration: " + _searchStopwatch.Elapsed.ToString(@"hh\:mm\:ss");
+
+    private void AddFinding(ThreatFinding finding)
+    {
+        var row = new ThreatRow(finding);
+        row.PropertyChanged += ThreatRow_PropertyChanged;
+        _findings.Add(row);
+    }
+
+    private void ThreatRow_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ThreatRow.Selected) && !_batchSelectingThreats)
+            UpdateThreatSelection();
+    }
+
+    private void SelectAllThreats_Click(object sender, RoutedEventArgs e)
+    {
+        var selecting = SelectAllThreatsCheck.IsChecked != false;
+        _batchSelectingThreats = true;
+        try { foreach (var row in _findings) row.Selected = selecting && row.CanQuarantine; }
+        finally { _batchSelectingThreats = false; }
+        UpdateThreatSelection();
+    }
+
+    private void UpdateThreatSelection()
+    {
+        var eligible = _findings.Count(x => x.CanQuarantine);
+        var chosen = _findings.Count(x => x.Selected && x.CanQuarantine);
+        SelectAllThreatsCheck.IsEnabled = eligible > 0 && !_busy && !_remediating;
+        SelectAllThreatsCheck.IsChecked = chosen == 0 ? false : chosen == eligible ? true : null;
+        ThreatSelection.Text = $"{chosen:N0} of {eligible:N0} eligible selected";
+        QuarantineButton.IsEnabled = chosen > 0 && !_busy && !_remediating;
     }
 
     private async void Quick_Click(object sender, RoutedEventArgs e) => await ScanAsync(ScanMode.Quick);
@@ -63,54 +107,64 @@ public partial class MainWindow : Window
     {
         if (_busy) return;
         SetBusy(true);
+        foreach (var row in _findings) row.PropertyChanged -= ThreatRow_PropertyChanged;
         _findings.Clear();
+        UpdateThreatSelection();
         FindingCount.Text = "0";
         FilesCount.Text = "0";
         ScanBar.IsIndeterminate = true;
+        _searchStopwatch.Restart();
+        _searchTimer.Start();
+        UpdateSearchTimer();
         _scanCancellation = new CancellationTokenSource();
         var token = _scanCancellation.Token;
         var progress = new Progress<ScanProgress>(p =>
         {
             FilesCount.Text = p.Files.ToString("N0");
             ScanStatus.Text = p.Phase + " — " + p.Files.ToString("N0") + " files; " +
-                p.Skipped.ToString("N0") + " access/scan errors";
+                p.Skipped.ToString("N0") + " inaccessible or skipped items";
         });
-        Log("Started " + mode + " system inspection.");
+        Log("Started " + mode + " system search.");
         try
         {
             var fileTask = ThreatScanner.RunAsync(mode, progress, token);
             var persistenceTask = Task.Run(PersistenceInspector.Inspect, token);
             var defenderTask = DefenderIntegration.RunScanAsync(mode, token);
             var report = await fileTask;
-            foreach (var finding in report.Findings) _findings.Add(finding);
+            foreach (var finding in report.Findings) AddFinding(finding);
             try
             {
                 var persistence = await persistenceTask;
-                foreach (var finding in persistence) _findings.Add(finding);
+                foreach (var finding in persistence) AddFinding(finding);
             }
             catch (OperationCanceledException) { }
             var antivirus = await defenderTask;
             foreach (var pastDetection in await DefenderIntegration.GetDetectionHistoryAsync(token))
-                _findings.Add(pastDetection);
+                AddFinding(pastDetection);
             FindingCount.Text = _findings.Count.ToString("N0");
-            ScanStatus.Text = report.Cancelled ? "Inspection cancelled: report is partial."
-                : "Inspection finished. Review findings and antivirus coverage.";
+            UpdateThreatSelection();
+            ScanStatus.Text = report.Cancelled ? "Search cancelled: results are partial."
+                : "Search finished. Review possible threats and antivirus coverage.";
             CoverageStatus.Text = antivirus + (report.Skipped > 0 ? " Some files were inaccessible." : "");
-            Log("Inspected " + report.Files.ToString("N0") + " files. " + _findings.Count +
+            Log("Searched " + report.Files.ToString("N0") + " files in " +
+                _searchStopwatch.Elapsed.ToString(@"hh\:mm\:ss") + ". " + _findings.Count +
                 " review items. " + antivirus);
         }
         catch (OperationCanceledException)
         {
-            ScanStatus.Text = "Scan cancelled; coverage incomplete.";
-            Log("Scan cancelled.");
+            ScanStatus.Text = "Search cancelled; coverage incomplete.";
+            Log("Search cancelled.");
         }
         catch (Exception ex)
         {
-            ScanStatus.Text = "Scan failed; coverage incomplete.";
-            Log("Scan error: " + ex.Message);
+            ScanStatus.Text = "Search failed; coverage incomplete.";
+            Log("Search error: " + ex.Message);
         }
         finally
         {
+            _searchTimer.Stop();
+            _searchStopwatch.Stop();
+            UpdateSearchTimer();
             _scanCancellation?.Dispose();
             _scanCancellation = null;
             ScanBar.IsIndeterminate = false;
@@ -161,7 +215,7 @@ public partial class MainWindow : Window
         {
             MainTabs.SelectedIndex = 1;
             MessageBox.Show(this, "Review the cleanup list and check specific files before using Delete checked files. " +
-                "OTS System Sanitizer never deletes items merely because you clicked Clean & Secure.",
+                "OTS System Sanitizer never destroys items merely because you clicked Clean & Secure.",
                 "Review required", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
@@ -201,12 +255,12 @@ public partial class MainWindow : Window
     {
         if (_busy) return;
         var selected = _cleanup.Where(x => x.Selected).Select(x => x.Candidate).ToArray();
-        if (selected.Length == 0) { MessageBox.Show(this, "Check files to delete first."); return; }
+        if (selected.Length == 0) { MessageBox.Show(this, "Check cleanup files to destroy first."); return; }
         var bytes = selected.Sum(x => x.SizeBytes);
         if (MessageBox.Show(this,
-            "Permanently delete " + selected.Length + " reviewed files (up to " + ToSize(bytes) +
-            ")? This action does not use the Recycle Bin and cannot be undone.",
-            "Confirm permanent deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            "Permanently destroy " + selected.Length + " reviewed cleanup files (up to " + ToSize(bytes) +
+            ")? This removes files without the Recycle Bin. It is not a secure overwrite and cannot be undone.",
+            "Confirm cleanup destruction", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
         var result = CleanupService.RemoveSelected(selected);
         foreach (var row in _cleanup.Where(x => x.Selected && !File.Exists(x.Path)).ToArray())
@@ -216,7 +270,7 @@ public partial class MainWindow : Window
         }
         UpdateCleanupSelection();
         SpaceCount.Text = ToSize(_cleanup.Sum(x => x.Candidate.SizeBytes));
-        Log("Deleted " + result.Removed + " files; nominal sizes " + ToSize(result.BytesRemoved) +
+        Log("Destroyed " + result.Removed + " cleanup files; nominal sizes " + ToSize(result.BytesRemoved) +
             "; errors: " + result.Failures.Count);
         if (result.Failures.Count > 0)
             MessageBox.Show(this, string.Join(Environment.NewLine, result.Failures.Take(8)),
@@ -426,23 +480,120 @@ public partial class MainWindow : Window
         catch (Exception ex) { Log("Windows Settings could not open: " + ex.Message); }
     }
 
-    private void Quarantine_Click(object sender, RoutedEventArgs e)
+    private async void Quarantine_Click(object sender, RoutedEventArgs e)
     {
-        if (ThreatList.SelectedItem is not ThreatFinding item || !File.Exists(item.Path))
+        if (_busy || _remediating) return;
+        var selected = _findings.Where(x => x.Selected && x.CanQuarantine)
+            .GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+            .Select(x => x.First()).ToArray();
+        if (selected.Length == 0)
         {
-            MessageBox.Show(this, "Choose a finding that points to an accessible file.");
+            MessageBox.Show(this, "Check eligible findings. Protected paths and Defender history records cannot be moved.");
             return;
         }
-        if (MessageBox.Show(this, "Move this file into user-profile quarantine?\n" + item.Path +
-            "\n\nHeuristic findings are unverified. Moving legitimate software can disrupt applications.",
-            "Quarantine file", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        if (MessageBox.Show(this,
+            "Quarantine " + selected.Length + " selected file(s)?\n\n" +
+            "These indicators are UNVERIFIED. Moving legitimate software can disrupt it. " +
+            "Each file will be available for investigation, restoration or explicit destruction.",
+            "Confirm quarantine and investigation", MessageBoxButton.YesNo,
+            MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        _remediating = true;
+        QuarantineButton.Content = "Quarantining...";
+        UpdateThreatSelection();
+        var quarantinedIds = new List<string>();
+        var failures = new List<string>();
         try
         {
-            var record = _vault.Quarantine(item.Path);
-            Log("Quarantined: " + record.OriginalPath + " [" + record.Id + "]");
+            foreach (var row in selected)
+            {
+                try
+                {
+                    var investigation = ThreatInvestigator.Explain(row.Finding);
+                    var record = await Task.Run(() => _vault.Quarantine(row.Path, investigation));
+                    quarantinedIds.Add(record.Id);
+                    Log("Quarantined for investigation: " + record.OriginalPath + " [" + record.Id + "]");
+                    foreach (var old in _findings.Where(x => x.Path.Equals(row.Path,
+                                 StringComparison.OrdinalIgnoreCase)).ToArray())
+                    {
+                        old.PropertyChanged -= ThreatRow_PropertyChanged;
+                        _findings.Remove(old);
+                    }
+                }
+                catch (Exception ex) { failures.Add(row.Path + ": " + ex.Message); }
+            }
+            FindingCount.Text = _findings.Count.ToString("N0");
+            RefreshVault();
+            if (quarantinedIds.Count > 0)
+            {
+                MainTabs.SelectedIndex = 4;
+                QuarantineList.SelectedItem = _quarantine.FirstOrDefault(x => x.Id == quarantinedIds[0]);
+                QuarantineList.ScrollIntoView(QuarantineList.SelectedItem);
+                MessageBox.Show(this,
+                    quarantinedIds.Count + " file(s) quarantined. Select each item and click Investigate selected " +
+                    "to see why it was flagged. Then choose Restore or Destroy reviewed file.\n\n" +
+                    (failures.Count > 0 ? failures.Count + " additional item(s) failed; see Activity." : ""),
+                    "Quarantine complete — investigate before destroying", MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            foreach (var failure in failures) Log("Quarantine refused: " + failure);
+            if (quarantinedIds.Count == 0 && failures.Count > 0)
+                MessageBox.Show(this, string.Join(Environment.NewLine, failures.Take(6)),
+                    "No files quarantined", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _remediating = false;
+            QuarantineButton.Content = "Quarantine & investigate checked";
+            UpdateThreatSelection();
+        }
+    }
+
+    private void QuarantineList_SelectionChanged(object sender,
+        System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        _investigatedId = null;
+        if (DestroyButton is null || InvestigationDetails is null) return;
+        DestroyButton.IsEnabled = false;
+        InvestigationDetails.Text = QuarantineList.SelectedItem is QuarantinedFile item
+            ? "Selected: " + item.OriginalPath + Environment.NewLine +
+              "Quarantined: not a confirmed infection." + Environment.NewLine +
+              "Click Investigate selected to see evidence and enable the Destroy decision."
+            : "Select a quarantined file, then choose Investigate selected to review the evidence.";
+    }
+
+    private void Investigate_Click(object sender, RoutedEventArgs e)
+    {
+        if (QuarantineList.SelectedItem is not QuarantinedFile item)
+        {
+            MessageBox.Show(this, "Select a quarantined item to investigate.");
+            return;
+        }
+        InvestigationDetails.Text = ThreatInvestigator.QuarantineReport(item);
+        _investigatedId = item.Id;
+        DestroyButton.IsEnabled = !_remediating;
+        Log("Viewed evidence for quarantine item [" + item.Id + "].");
+    }
+
+    private void Destroy_Click(object sender, RoutedEventArgs e)
+    {
+        if (_remediating || QuarantineList.SelectedItem is not QuarantinedFile item ||
+            _investigatedId != item.Id)
+        {
+            MessageBox.Show(this, "Investigate the selected item before destroying it.");
+            return;
+        }
+        if (MessageBox.Show(this, "PERMANENTLY DESTROY this quarantined encrypted item?\n" +
+            item.OriginalPath + "\n\nThe vault copy and manifest will be removed. " +
+            "This is not a forensic secure erase of disk blocks, and cannot be undone.",
+            "Confirm irreversible destruction", MessageBoxButton.YesNo,
+            MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            _vault.Destroy(item);
+            Log("Destroyed quarantined item [" + item.Id + "]: " + item.OriginalPath);
             RefreshVault();
         }
-        catch (Exception ex) { MessageBox.Show(this, ex.Message, "Quarantine refused"); }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, "Destruction refused"); }
     }
 
     private void Restore_Click(object sender, RoutedEventArgs e)
@@ -462,6 +613,9 @@ public partial class MainWindow : Window
 
     private void RefreshVault()
     {
+        _investigatedId = null;
+        DestroyButton.IsEnabled = false;
+        InvestigationDetails.Text = "Select a quarantined file, then choose Investigate selected to review the evidence.";
         _quarantine.Clear();
         foreach (var file in _vault.List()) _quarantine.Add(file);
     }
@@ -473,6 +627,7 @@ public partial class MainWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         _scanCancellation?.Cancel();
+        _searchTimer.Stop();
         base.OnClosing(e);
     }
 }
@@ -491,5 +646,31 @@ public sealed class CleanupRow : INotifyPropertyChanged
     public string Path => Candidate.Path;
     public string Category => Candidate.Category;
     public string Size => Candidate.SizeLabel;
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
+
+public sealed class ThreatRow : INotifyPropertyChanged
+{
+    public ThreatFinding Finding { get; }
+    public ThreatRow(ThreatFinding finding) => Finding = finding;
+    private bool _selected;
+    public bool Selected
+    {
+        get => _selected;
+        set
+        {
+            if (_selected == value || (value && !CanQuarantine)) return;
+            _selected = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Selected)));
+        }
+    }
+    public bool CanQuarantine => PathPolicy.CanQuarantine(Path);
+    public string SelectionHint => CanQuarantine ? "Eligible user file; review before quarantine." :
+        "Not an accessible user-profile file; check Windows Security or investigate manually.";
+    public string Level => Finding.Level;
+    public string Title => Finding.Title;
+    public string Source => Finding.Source;
+    public string Path => Finding.Path;
+    public string Evidence => Finding.Evidence;
     public event PropertyChangedEventHandler? PropertyChanged;
 }
