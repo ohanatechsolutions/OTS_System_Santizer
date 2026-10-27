@@ -11,8 +11,8 @@
   <ApplicationIcon>Assets\OTSSystemSanitizer.ico</ApplicationIcon>
   <Company>Ohana Tech Solutions</Company>
   <Product>OTS System Sanitizer</Product>
-  <Description>Windows-native security inspection and safe storage recovery</Description>
-  <Version>0.2.0</Version>
+  <Description>Windows Anti-Malware: Search and Destroy</Description>
+  <Version>0.3.0</Version>
  </PropertyGroup>
  <ItemGroup><ProjectReference Include="..\OTSSystemSanitizer.Core\OTSSystemSanitizer.Core.csproj"/></ItemGroup>
 </Project>

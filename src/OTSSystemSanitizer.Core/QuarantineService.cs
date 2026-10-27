@@ -45,7 +45,7 @@ public sealed class QuarantineService
         return result.OrderByDescending(x => x.QuarantinedAt).ToArray();
     }
 
-    public QuarantinedFile Quarantine(string original)
+    public QuarantinedFile Quarantine(string original, string? investigation = null)
     {
         if (!PathPolicy.CanQuarantine(original))
             throw new InvalidOperationException("Only accessible, non-reparse user-profile files can be quarantined.");
@@ -64,7 +64,7 @@ public sealed class QuarantineService
             var hash = EncryptFile(stage, vault, key);
             var protectedKey = Convert.ToBase64String(Dpapi.Protect(key));
             var entry = new QuarantinedFile(id, original, vault, hash, DateTimeOffset.UtcNow,
-                protectedKey, lastWrite, attributes);
+                protectedKey, lastWrite, attributes, investigation);
             File.WriteAllText(manifest, JsonSerializer.Serialize(entry));
             // Do not remove the plaintext original until encrypted contents and manifest exist.
             File.Delete(stage);
@@ -115,6 +115,30 @@ public sealed class QuarantineService
             CryptographicOperations.ZeroMemory(key);
             try { if (File.Exists(temp)) File.Delete(temp); } catch { }
         }
+    }
+
+    /// <summary>
+    /// Permanently remove only a reviewed encrypted vault item and its manifest.
+    /// Does not claim forensic secure erasure of the physical storage.
+    /// </summary>
+    public void Destroy(QuarantinedFile record)
+    {
+        if (!Guid.TryParseExact(record.Id, "N", out _))
+            throw new IOException("Invalid quarantine item ID.");
+        var vault = Path.Combine(_root, record.Id + ".aegq");
+        var manifest = Path.Combine(_root, record.Id + ".json");
+        if (!Path.GetFullPath(vault).Equals(Path.GetFullPath(record.VaultFile),
+                StringComparison.OrdinalIgnoreCase) ||
+            !PathPolicy.IsWithin(vault, _root) || !PathPolicy.IsWithin(manifest, _root) ||
+            !File.Exists(vault) || !File.Exists(manifest) ||
+            PathPolicy.IsReparsePoint(vault) || PathPolicy.IsReparsePoint(manifest))
+            throw new IOException("Vault item is missing, redirected or outside the quarantine folder.");
+        var stored = JsonSerializer.Deserialize<QuarantinedFile>(File.ReadAllText(manifest));
+        if (stored is null || stored.Id != record.Id || stored.VaultFile != record.VaultFile ||
+            !stored.Sha256.Equals(record.Sha256, StringComparison.OrdinalIgnoreCase))
+            throw new IOException("Vault manifest no longer matches the selected item.");
+        File.Delete(vault);
+        File.Delete(manifest);
     }
 
     private static string EncryptFile(string plaintextPath, string vaultPath, byte[] key)

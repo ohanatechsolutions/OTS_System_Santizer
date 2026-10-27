@@ -1,10 +1,14 @@
 # OTS System Sanitizer — release readiness checklist
 
-## Included in preview (v0.2.0)
+## Included in preview (v0.3.0)
 - [x] WPF desktop dashboard for Windows x64
 - [x] Rebranded app, binaries, namespaces, icon resource and installer with unchanged upgrade AppId
-- [x] Legacy quarantine and encrypted account-storage compatibility
-- [x] Quick/Deep scan actions, progress and cancellation
+- [x] Legacy quarantine compatibility without retaining repository credential management
+- [x] Quick/Deep Search actions, progress, cancellation and elapsed timer
+- [x] Individually selectable threat findings and Select all for eligible files
+- [x] User-confirmed batch quarantine and per-file persisted evidence
+- [x] Investigate before confirming irreversible destruction of encrypted quarantine entries
+- [x] No repository browser or connected account/token code included
 - [x] Bounded multi-threaded recursive file inspection
 - [x] Process and Run/RunOnce, service and readable scheduled-task anomaly inspection
 - [x] Historical Defender detection records clearly labeled as past events
@@ -12,7 +16,7 @@
 - [x] Microsoft Defender on-demand scan invocation with failure reporting
 - [x] Itemized user-temp/crashdump/browser-cache discovery
 - [x] Size reporting and individually selected cleanup
-- [x] Confirmation and conservative path checks on deletion
+- [x] Confirmation and conservative path checks on destruction
 - [x] AES-256-GCM encrypted manual quarantine, Windows DPAPI per-item key and hash-verified restore
 - [x] Inno Setup EXE installer automated by Windows GitHub Actions
 - [x] Local automated smoke tests

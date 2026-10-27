@@ -16,6 +16,11 @@ try
     File.WriteAllText(fake, "test fixture, not executable");
     Check(ThreatScanner.Heuristic(fake)?.Contains("double extension") == true, "Deceptive extension detection");
     Check(ThreatScanner.Heuristic(Path.Combine(temp, "notes.txt")) is null, "Ordinary text not flagged");
+    var explanation = ThreatInvestigator.Explain(new ThreatFinding(FindingSeverity.Medium,
+        "File requires review", "Local heuristic (unverified)",
+        "Executable uses a deceptive double extension", fake, DateTimeOffset.UtcNow));
+    Check(explanation.Contains("Windows uses the final extension"),
+        "Investigation describes the exact evidence without claiming a confirmed infection");
     Check(PathPolicy.IsWithin(fake, temp), "Contained path accepted");
     Check(!PathPolicy.IsWithin(temp + "-other\x5cfile.exe", temp), "Sibling prefix traversal rejected");
 
@@ -36,20 +41,6 @@ try
     var removed = CleanupService.RemoveSelected(new[] { candidate });
     Check(removed.Removed == 1 && !File.Exists(cleanup), "Reviewed temp file can be removed");
 
-    var accountsPath = Path.Combine(temp, "github-accounts.json");
-    var accounts = new GitHubAccountStore(accountsPath);
-    const string fakeTokenOne = "test-only-not-a-real-github-credential-123";
-    const string fakeTokenTwo = "another-test-only-token-456";
-    accounts.Save("test-account-1", fakeTokenOne);
-    accounts.Save("test-account-2", fakeTokenTwo);
-    Check(accounts.Accounts.Count == 2, "Multiple GitHub account credentials stored");
-    Check(accounts.GetToken("test-account-1") == fakeTokenOne &&
-          accounts.GetToken("test-account-2") == fakeTokenTwo, "Windows DPAPI credential round-trip");
-    Check(!File.ReadAllText(accountsPath).Contains(fakeTokenOne), "GitHub credential not persisted in plaintext");
-    Check(accounts.Remove("test-account-1") &&
-          accounts.Accounts.Count == 1 && accounts.GetToken("test-account-2") == fakeTokenTwo,
-          "Disconnect only removes selected GitHub account");
-
     var vault = new QuarantineService(Path.Combine(temp, "vault"));
     Check(PathPolicy.CanQuarantine(fake), "User-profile file eligible for limited quarantine");
     var record = vault.Quarantine(fake);
@@ -60,6 +51,16 @@ try
     Check(vault.List().Any(x => x.Id == record.Id), "Quarantine manifest discovered");
     vault.Restore(record);
     Check(File.Exists(fake) && !File.Exists(record.VaultFile), "Restore round-trip succeeds");
+
+    var toDestroy = vault.Quarantine(fake, explanation);
+    Check(vault.List().Single(x => x.Id == toDestroy.Id).Investigation == explanation,
+        "Investigation evidence preserved in vault manifest");
+    Check(ThreatInvestigator.QuarantineReport(toDestroy).Contains(toDestroy.Sha256),
+        "Investigation view includes immutable source SHA-256");
+    vault.Destroy(toDestroy);
+    Check(!File.Exists(fake) && !File.Exists(toDestroy.VaultFile) && !vault.List().Any(),
+        "Encrypted vault item and manifest removed by explicit destruction");
+
 
     Console.WriteLine("All smoke tests passed.");
 }

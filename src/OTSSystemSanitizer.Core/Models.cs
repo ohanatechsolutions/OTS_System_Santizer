@@ -34,4 +34,4 @@ public sealed record CleanupCandidate(string Path, string Category, long SizeByt
 public sealed record CleanupResult(int Removed, long BytesRemoved, IReadOnlyList<string> Failures);
 public sealed record QuarantinedFile(string Id, string OriginalPath, string VaultFile,
     string Sha256, DateTimeOffset QuarantinedAt, string ProtectedKey,
-    DateTime LastWriteUtc, FileAttributes OriginalAttributes);
+    DateTime LastWriteUtc, FileAttributes OriginalAttributes, string? Investigation = null);
