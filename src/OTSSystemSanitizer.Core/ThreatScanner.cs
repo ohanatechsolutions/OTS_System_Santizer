@@ -91,7 +91,7 @@ public static class ThreatScanner
                     }
                     var n = Interlocked.Increment(ref files);
                     if (n % 256 == 0)
-                        progress?.Report(new ScanProgress(n, Interlocked.Read(ref bytes), Volatile.Read(ref skipped), path, "Inspecting files"));
+                        progress?.Report(new ScanProgress(n, Interlocked.Read(ref bytes), Volatile.Read(ref skipped), path, "Searching files"));
                 }
                 catch (OperationCanceledException) { throw; }
                 catch (Exception) { Interlocked.Increment(ref skipped); }
