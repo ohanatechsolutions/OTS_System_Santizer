@@ -7,7 +7,7 @@ OTS System Sanitizer is security-sensitive preview software. Report exploitable 
 - Quarantine uses AES-256-GCM encrypted content and a DPAPI-wrapped per-item key; it is user-scoped and not kernel protected. Malware already running as the same user could potentially access decrypted content.
 - Automated detection is limited to supported Microsoft Defender invocations, past Defender detection records, and described local heuristics; no on-access protections or kernel inspection.
 - Windows Defender can continue working after a cancelled `Start-MpScan` call.
-- File deletion is permanent after user selection and explicit consent. It does not provide undo.
+- Destruction of reviewed encrypted quarantine copies and confirmed cleanup files is permanent after user selection and explicit consent. It does not provide undo or guaranteed forensic secure erasure.
 - Never blindly delete or quarantine files within Windows, WinSxS, Windows Installer, Program Files or another user account's directories.
 
 For any confirmed infection, use Microsoft Defender/Windows Security or trusted incident-response tooling to remediate it.

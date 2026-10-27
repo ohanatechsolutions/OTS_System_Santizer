@@ -1,57 +1,93 @@
 # OTS System Sanitizer
 
-**Windows-native security inspection and conservative storage recovery** for Windows 10/11 x64.
+**Windows Anti-Malware: Search and Destroy** for Windows 10/11 x64.
 
-Developed by **Ohana Tech Solutions**. Open-source, offline-first, and free of subscription requirements.
+Developed by **Ohana Tech Solutions**. Local-first Windows threat searching,
+reviewable quarantine, and conservative storage recovery. No account connection,
+cloud service, repository browser or subscription is needed to run the application.
 
-> **Preview build 0.2.0.** OTS System Sanitizer is **not a replacement for Microsoft Defender or another antivirus product**. Its own findings are local heuristics, not verified malware diagnoses. Scan coverage is limited by Windows access controls and antivirus availability. There is no kernel driver, protected-process bypass, comprehensive scheduled-task inspection, generalized registry cleaner or kernel-enforced quarantine vault in this build. Do not use this application as the sole basis for believing a system is safe.
+> **Preview v0.3.0:** This is **not** a replacement for Microsoft Defender or another
+> antivirus product. Local findings are *heuristics*, not proof of infection.
+> Defender scanning is requested when available; coverage depends on Windows
+> permissions and installed security providers. There is no kernel driver,
+> protected-process bypass or kernel-enforced quarantine.
 
-## Download / install
+## Install
 
-1. Open the repository's **Actions** tab and select **OTS System Sanitizer — Windows build, tests and installer**, select the latest **successful** Windows build, and download the `OTSSystemSanitizer-Windows-Installer-x64` artifact.
+1. Go to the repository **Actions** tab, open the most recent **successful**
+   `OTS System Sanitizer — Windows build, tests and installer` run, and download
+   `OTSSystemSanitizer-Windows-Installer-x64`.
 2. Extract the artifact ZIP and run `OTSSystemSanitizerSetup-x64.exe`.
-3. The build pipeline also places the compiled installer at [installer/OTSSystemSanitizerSetup-x64.exe](installer/OTSSystemSanitizerSetup-x64.exe) after a successful main-branch build when repository Actions write permission allows it.
-4. Verify the installer against [installer/OTSSystemSanitizerSetup-x64.sha256](installer/OTSSystemSanitizerSetup-x64.sha256) with Windows PowerShell: `(Get-FileHash .\\OTSSystemSanitizerSetup-x64.exe -Algorithm SHA256).Hash`.
-5. No paid tools are required to run the software. Builds are currently unsigned; Windows SmartScreen may warn. Verify the repository and published SHA-256 before installation.
+3. A successful main-branch build also publishes the compiled EXE to
+   [installer/OTSSystemSanitizerSetup-x64.exe](installer/OTSSystemSanitizerSetup-x64.exe)
+   when the repository's Actions write permission permits it.
+4. Verify the matching SHA-256 using
+   `(Get-FileHash .\OTSSystemSanitizerSetup-x64.exe -Algorithm SHA256).Hash`.
+   The companion digest file is
+   [installer/OTSSystemSanitizerSetup-x64.sha256](installer/OTSSystemSanitizerSetup-x64.sha256).
 
-**Source installers:** `installer/OTSSystemSanitizer.iss` is the Inno Setup project, **not** an executable. Use the compiled `.exe` for installation.
+The `.iss` file is Inno Setup source, **not** a runnable Windows installer.
+Unsigned preview builds may trigger SmartScreen warnings.
 
-## Usage
+## Search and Destroy workflow
 
-- **Quick Scan:** read-only inspection of selected user startup/temporary/download paths, accessible process metadata and unusual Run/RunOnce, service and scheduled-task commands; also requests a Microsoft Defender quick scan where available.
-- **Deep Scan:** bounded multi-worker read-only inspection of fixed, accessible volumes, plus Microsoft Defender full scan when available.
-- **Findings:** evidence-first, source-labelled review items. Suspicious locations and double extensions are heuristics. They are not automatic infection verdicts.
-- **GitHub repositories (read-only):** connect multiple GitHub.com accounts with separate fine-grained personal access tokens; browse repository lists, folders and text-file previews without modifying code. Tokens are encrypted with Windows DPAPI in `%LOCALAPPDATA%\\OTSSystemSanitizer\\github-accounts.json` (or the preexisting legacy data directory for upgrades) and are accessible only to the current Windows user. This is a repository browser, **not yet an online security auditor**.
-- **Installed applications:** inspect registered software, publisher, estimated size, uninstaller availability and missing install folder hints. Removal is delegated to Windows Settings.
-- **Space recovery:** discover old user Temp and CrashDumps files; optionally include Chrome/Edge default-profile cache. Files are **never selected for deletion automatically**. After analyzing storage, use **Select all** to check or uncheck every listed candidate at once; individual checkboxes remain editable and the selection count updates live.
-- **Delete checked files:** user-confirmed permanent deletion with stale-file checks, category allowlist and reparse-point checks. No raw WinSxS/Windows Installer deletion.
-- **Quarantine:** explicitly selected, accessible user-profile files may be moved to an app-local vault and restored. AES-256-GCM encryption with a unique Windows DPAPI user-wrapped key per item, integrity verification and explicit restore. This is **not kernel-enforced antivirus isolation** and does not protect against malware already running as the same user.
+- **Quick Search:** local user startup, temporary and download paths; process
+  metadata and selected persistence indicators, plus a requested Defender quick scan.
+- **Deep Search:** read-only searching of accessible fixed volumes with bounded
+  workers, plus a requested Defender full scan.
+- **Search duration:** live `HH:MM:SS` stopwatch through the full search operation;
+  the final duration remains visible after completion, cancellation or failure.
+- **Threat search:** findings show severity, title, source, location and concrete
+  recorded evidence. Select eligible user files individually or use **Select all**.
+  Informational history records and protected/inaccessible paths are not selectable.
+- **Quarantine & investigate checked:** moves each confirmed eligible selected file
+  into the user-scoped encrypted quarantine; the original finding's evidence and
+  reason for flagging are saved with the vault metadata.
+- **Investigate selected:** in Quarantine, displays recorded evidence, explanation,
+  SHA-256 and limitations for a selected file. **Destroy reviewed file** remains
+  disabled until the selected item has been investigated in this session.
+- **Destroy reviewed file:** *separate explicit confirmation* removes that item's
+  encrypted vault contents and manifest. This is irreversible; no secure overwrite
+  or complete physical erasure of SSD blocks is claimed.
+- **Restore selected file:** returns quarantined data to its original path after
+  confirmation and verified decryption, provided the destination is safe and vacant.
+- **Space recovery:** find older user Temp and CrashDumps files; optionally include
+  browser cache. Individually check candidates or select all, then confirm
+  **Destroy checked cleanup files**. No arbitrary Windows-system directory deletion.
+- **Installed applications:** read-only inventory with Windows Settings for removal.
 
-**Clean & Secure** performs a quick inspection and discovers storage candidates, but it does **not** silently remediate or delete anything.
+The **Clean & Secure** shortcut performs Quick Search followed by storage analysis.
+It never automatically destroys findings or cleanup candidates.
 
-## Upgrading from the previous name
+## No repository auditing features
 
-Version 0.2.0 introduces the **OTS System Sanitizer** name. The Inno Setup application ID is unchanged, allowing the installer to treat it as an upgrade rather than a separate application.
+This product is exclusively for local Windows maintenance and threat searching.
+It has **no repository-browser tab, remote repository access, connected account
+management, personal access token storage or source-code/security-audit engine**.
+Those are separate product responsibilities and are not bundled here.
 
-For existing installations, the app continues reading preexisting encrypted account tokens and quarantine data from `%LOCALAPPDATA%\\AegisPrime` when present. It does **not** delete or relocate encrypted vault data automatically; do not remove that legacy folder while you have items in quarantine or old account credentials.
+Existing versions may have created an encrypted
+`%LOCALAPPDATA%\OTSSystemSanitizer\github-accounts.json` or legacy
+`%LOCALAPPDATA%\AegisPrime\github-accounts.json` credential file.
+Version 0.3 no longer reads, maintains or updates those files.
+If you choose to clean up old account credentials, ensure you have no other
+application that relies on them and delete **only the specifically named file**.
+Also revoke no-longer-needed access tokens in the account provider's settings.
+Do **not** delete the parent data folder: it can contain valuable quarantine data.
 
-New installations use `%LOCALAPPDATA%\\OTSSystemSanitizer`. Quarantine data format identifiers are retained to support restores. The old `AegisPrime.exe` is removed from the installation directory during the renamed installer upgrade.
+## Upgrade compatibility
 
-**Repository rename:** the intended new GitHub repository name is `OTS_System_Sanitizer`. After renaming the repository in GitHub, verify the Actions and release URLs.
+Version 0.2.0 renamed the executable and app from Aegis Prime.
+The Inno Setup AppId, per-user quarantine directory compatibility and encrypted
+quarantine format are preserved to allow upgrading without losing restore capability.
+The application continues reading legacy quarantine metadata when present.
 
-## Connecting multiple GitHub accounts
-
-1. In GitHub, go to **Settings → Developer settings → Personal access tokens → Fine-grained tokens**, and create a token for each GitHub account you want to connect. Limit it to the repositories you want OTS System Sanitizer to read.
-2. Grant **Metadata: Read** (automatic for fine-grained tokens) and **Contents: Read** repository permissions. Do not grant write permissions or paste tokens into issues, source files or the Activity log. Some organizations require approval or SSO authorization to read private repositories.
-3. Open OTS System Sanitizer's **GitHub repositories** tab. Paste one token into the masked field and click **Connect account**. The app verifies its owner using GitHub's authenticated user endpoint, then stores the credential encrypted on this Windows user profile.
-4. Repeat for the next account. Choose **All accounts** and **Refresh repositories** to see repositories from all connected accounts together, each labelled with its account. Select a repository → **Browse selected repository** → select a folder/file → **Open selected**.
-5. To remove an account, choose it in the Account menu and click **Disconnect selected**. This only removes local storage; revoke its token in GitHub Settings if it may have been compromised.
-
-Only HTTPS requests to the official `api.github.com` REST API are used. No OAuth client secret is required, and the app does not run `git push`, `git clone` or any write API operation. Individual folder listings are limited by GitHub's Contents API and text-file preview is limited to 1 MB. Authentication requires internet access; local scans remain offline-first. Account tokens remain valid until revoked/expired. **GitHub Copilot is not needed.**
+The GitHub repository is currently named `ohanatechsolutions/OTS_System_Santizer`;
+the displayed application and installer are correctly named **OTS System Sanitizer**.
 
 ## Build locally
 
-Install [Visual Studio 2022 or later](https://visualstudio.microsoft.com/) with the **.NET desktop development** workload or the .NET 10 SDK on Windows, then run:
+Requires Windows 10/11, .NET 10 SDK and Inno Setup 6 for installer builds:
 
 ```powershell
 dotnet build src/OTSSystemSanitizer.Desktop/OTSSystemSanitizer.Desktop.csproj -c Release
@@ -60,17 +96,8 @@ dotnet publish src/OTSSystemSanitizer.Desktop/OTSSystemSanitizer.Desktop.csproj 
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\OTSSystemSanitizer.iss
 ```
 
-The produced executable installer is `installer/output/OTSSystemSanitizerSetup-x64.exe`. Windows runners compile it in GitHub Actions.
+CI compiles and validates the actual installer and checks installation/uninstallation.
+See [architecture](docs/ARCHITECTURE.md),
+[release readiness](docs/RELEASE_CHECKLIST.md) and [security](SECURITY.md).
 
-## Security design
-
-- No always-on services, background telemetry, cloud uploads or paid APIs.
-- Ordinary desktop process; administrator access is not silently requested by the UI. Setup requests UAC to install under Program Files.
-- Defender controls antivirus detection and remediation. OTS System Sanitizer only requests supported on-demand scans, and reports when invoking them fails.
-- File changes require a separate confirmation and are restricted to user-profile scope.
-- Filesystem traversal skips reparse points; inaccessible paths are not reported as clean.
-- No system-critical registry/file deletion.
-
-See [architecture](docs/ARCHITECTURE.md), [security policy](SECURITY.md), and [known limitations](docs/RELEASE_CHECKLIST.md).
-
-**Windows 10:** standard support ended October 14, 2025. Compatible systems can run OTS System Sanitizer, but an unpatched OS remains at risk.
+**Windows 10:** Standard support ended October 14, 2025; unpatched systems remain at risk.
