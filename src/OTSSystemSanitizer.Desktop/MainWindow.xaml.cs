@@ -35,7 +35,7 @@ public partial class MainWindow : Window
         QuarantineList.ItemsSource = _quarantine;
         InstalledAppList.ItemsSource = _apps;
         RefreshVault();
-        Log("Application started; no threats assumed absent until relevant scans complete.");
+        Log("Application started; no threats assumed absent until relevant searches complete.");
     }
 
     private void Log(string message)
@@ -203,7 +203,7 @@ public partial class MainWindow : Window
         if (_cleanup.Count > 0)
         {
             MainTabs.SelectedIndex = 1;
-            MessageBox.Show(this, "Review the cleanup list and check specific files before using Delete checked files. " +
+            MessageBox.Show(this, "Review the cleanup list and check specific files before using Destroy checked cleanup files. " +
                 "OTS System Sanitizer never destroys items merely because you clicked Clean & Secure.",
                 "Review required", MessageBoxButton.OK, MessageBoxImage.Information);
         }

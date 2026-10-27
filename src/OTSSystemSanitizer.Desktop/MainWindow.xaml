@@ -99,7 +99,7 @@
        <CheckBox x:Name="SelectAllCleanupCheck" Content="Select all" IsEnabled="False"
         VerticalAlignment="Center" Foreground="#E0EAFA" Margin="0,0,16,0"
         Click="SelectAllCleanup_Click"
-        ToolTip="Select or clear all currently listed cleanup files. Permanent deletion still requires confirmation."/>
+        ToolTip="Select or clear all currently listed cleanup files. Permanent destruction still requires confirmation."/>
        <TextBlock x:Name="CleanupSelection" Text="" Foreground="#ACBED4" VerticalAlignment="Center"/>
       </StackPanel>
       <Button DockPanel.Dock="Right" Content="Destroy checked cleanup files" Click="DeleteChecked_Click"
@@ -107,7 +107,7 @@
      </DockPanel>
      <ListView Grid.Row="1" x:Name="CleanupList">
       <ListView.View><GridView>
-       <GridViewColumn Header="Delete" Width="68">
+       <GridViewColumn Header="Destroy" Width="68">
         <GridViewColumn.CellTemplate><DataTemplate>
          <CheckBox IsChecked="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </DataTemplate></GridViewColumn.CellTemplate>
