@@ -95,8 +95,8 @@ public partial class MainWindow : Window
         }
 
         // Fit within usable monitor space, keeping some breathing room on all sides.
-        var width = Math.Min(1280, Math.Max(1, area.Width * 0.94));
-        var height = Math.Min(780, Math.Max(1, area.Height * 0.94));
+        var width = Math.Min(1300, Math.Max(1, area.Width - 32));
+        var height = Math.Min(800, Math.Max(1, area.Height - 32));
         MinWidth = Math.Min(760, width);
         MinHeight = Math.Min(540, height);
         Width = width;
