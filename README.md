@@ -6,7 +6,7 @@ Developed by **Ohana Tech Solutions**. Local-first Windows threat searching,
 reviewable quarantine, and conservative storage recovery. No account connection,
 cloud service, repository browser or subscription is needed to run the application.
 
-> **Preview v0.3.0:** This is **not** a replacement for Microsoft Defender or another
+> **Preview v0.4.0:** This is **not** a replacement for Microsoft Defender or another
 > antivirus product. Local findings are *heuristics*, not proof of infection.
 > Defender scanning is requested when available; coverage depends on Windows
 > permissions and installed security providers. There is no kernel driver,
@@ -28,6 +28,28 @@ cloud service, repository browser or subscription is needed to run the applicati
 
 The `.iss` file is Inno Setup source, **not** a runnable Windows installer.
 Unsigned preview builds may trigger SmartScreen warnings.
+
+## 0.4 visual refresh
+
+The Windows WPF interface now uses the slate and steel-blue design system:
+`#0F172A`, `#1E293B`, `#34587C`, `#24405E`, `#4E79A7`,
+`#8BA8CD`, and high-contrast white. Rounded translucent-looking cards,
+thin borders, restrained selection glows, accessible keyboard focus states,
+sidebar navigation, and a top filter field keep the search-and-destroy workflow
+organized. The filter searches findings already loaded in Threat Review; it
+**does not initiate a new security search**.
+
+The supplied shield/check/gear/magnifier branding is installed as
+[PNG](src/OTSSystemSanitizer.Desktop/Assets/OTSSystemSanitizer.png)
+for the application's header and as
+[ICO](src/OTSSystemSanitizer.Desktop/Assets/OTSSystemSanitizer.ico)
+for the Windows application icon, installer, and shortcuts.
+The artwork was resized for efficient desktop display; its recognizable
+visual identity is retained.
+
+This is a WPF-native glass-style theme rather than true system acrylic
+backdrop blur. All quarantine safeguards, manual confirmations, and
+offline-only behavior are preserved.
 
 ## Search and Destroy workflow
 
