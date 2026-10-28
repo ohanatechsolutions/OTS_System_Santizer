@@ -86,6 +86,7 @@
    <TabItem Header="⌕  Threat Review" IsSelected="True">
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
      <DockPanel Margin="4,8,0,10" LastChildFill="False">
       <TextBlock Text="Indicators are not proof of malware; only eligible user files can be quarantined."
         Foreground="#A8BAD0" VerticalAlignment="Center"/>
@@ -98,6 +99,7 @@
         Background="#79513B" Margin="14,0,0,0" IsEnabled="False"/>
       </StackPanel>
      </DockPanel>
+     </ScrollViewer>
      <ListView Grid.Row="1" x:Name="ThreatList" SelectionMode="Extended">
       <ListView.View><GridView>
        <GridViewColumn Header="Select" Width="65"><GridViewColumn.CellTemplate><DataTemplate>
@@ -116,6 +118,7 @@
    <TabItem Header="▤  Space Recovery">
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
      <DockPanel Margin="4,8,0,10">
       <StackPanel Orientation="Horizontal">
        <Button Content="Analyze storage" Click="Analyze_Click"/>
@@ -130,6 +133,7 @@
       <Button DockPanel.Dock="Right" Content="Destroy checked cleanup files" Click="DeleteChecked_Click"
         Background="#754453" HorizontalAlignment="Right" Margin="10,0,0,0"/>
      </DockPanel>
+     </ScrollViewer>
      <ListView Grid.Row="1" x:Name="CleanupList">
       <ListView.View><GridView>
        <GridViewColumn Header="Destroy" Width="68">
@@ -149,6 +153,7 @@
    <TabItem Header="▦  Installed Apps">
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
      <DockPanel Margin="4,8,0,10">
       <StackPanel Orientation="Horizontal">
        <Button Click="RefreshApps_Click" Content="Inspect installed apps"/>
@@ -157,6 +162,7 @@
       <TextBlock DockPanel.Dock="Right" Text="Stale-location hints are informational; removal uses Windows Settings."
        Foreground="#A8BAD0" VerticalAlignment="Center"/>
      </DockPanel>
+     </ScrollViewer>
      <ListView x:Name="InstalledAppList" Grid.Row="1">
       <ListView.View><GridView>
        <GridViewColumn Header="Application" Width="270" DisplayMemberBinding="{Binding Name}"/>
@@ -172,6 +178,7 @@
    <TabItem Header="◇  Quarantine">
     <Grid Margin="8">
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="195"/></Grid.RowDefinitions>
+     <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
      <DockPanel Margin="4,8,0,10" LastChildFill="False">
       <TextBlock Text="Review quarantined evidence before destroying or restoring." Foreground="#ACBED4" VerticalAlignment="Center"/>
       <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -181,6 +188,7 @@
        <Button Content="Restore selected file" Click="Restore_Click" Background="#2A6B70" Margin="8,0,0,0"/>
       </StackPanel>
      </DockPanel>
+     </ScrollViewer>
      <ListView Grid.Row="1" x:Name="QuarantineList" SelectionChanged="QuarantineList_SelectionChanged">
       <ListView.View><GridView>
        <GridViewColumn Header="Date" Width="170" DisplayMemberBinding="{Binding QuarantinedAt}"/>
