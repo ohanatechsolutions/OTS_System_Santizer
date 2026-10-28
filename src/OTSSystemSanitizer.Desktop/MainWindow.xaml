@@ -3,7 +3,7 @@
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  Title="OTS System Sanitizer — Search and Destroy"
  Icon="Assets/OTSSystemSanitizer.ico"
- Height="880" Width="1480" MinHeight="730" MinWidth="1160"
+ Height="780" Width="1280" MinHeight="540" MinWidth="760"
  WindowStartupLocation="CenterScreen">
  <Grid Margin="20">
   <Grid.RowDefinitions>
@@ -14,16 +14,16 @@
   <Border Grid.Row="0" Style="{StaticResource GlassCard}" Padding="15,11">
    <DockPanel LastChildFill="True">
     <Border DockPanel.Dock="Left" Background="#132239" BorderBrush="#34587C"
-       BorderThickness="1" CornerRadius="12" Width="68" Height="68" Margin="0,0,16,0">
+       BorderThickness="1" CornerRadius="12" Width="60" Height="60" Margin="0,0,16,0">
      <Image Source="pack://application:,,,/Assets/OTSSystemSanitizer.png"
-       Width="61" Height="61" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+       Width="54" Height="54" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
     </Border>
     <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center">
-     <TextBlock Text="OTS SYSTEM SANITIZER" FontWeight="Bold" FontSize="24" Foreground="#FFFFFF"/>
+     <TextBlock Text="OTS SYSTEM SANITIZER" FontWeight="Bold" FontSize="21" Foreground="#FFFFFF"/>
      <TextBlock Text="Windows Anti-Malware: Search and Destroy"
        Foreground="#8BA8CD" FontSize="12" Margin="0,5,0,0"/>
     </StackPanel>
-    <StackPanel DockPanel.Dock="Right" Width="330" VerticalAlignment="Center" Margin="22,0,4,0">
+    <StackPanel DockPanel.Dock="Right" Width="250" VerticalAlignment="Center" Margin="22,0,4,0">
      <TextBlock Text="FILTER THREAT FINDINGS" FontSize="10" Foreground="#8BA8CD"
        FontWeight="SemiBold" Margin="3,0,0,5"/>
      <TextBox x:Name="FindingSearchBox" Height="39" FontSize="12"
