@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using OTSSystemSanitizer.Core;
 
 namespace OTSSystemSanitizer.Desktop;
@@ -52,6 +54,25 @@ public partial class MainWindow : Window
         CancelButton.IsEnabled = busy;
         UpdateThreatSelection();
         CleanAndSecureButton.IsEnabled = !busy;
+    }
+
+    private void FindingSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Only filter local, already-loaded findings. No new search is initiated.
+        if (ThreatList is null || ThreatList.ItemsSource is null) return;
+        var query = FindingSearchBox.Text.Trim();
+        var view = CollectionViewSource.GetDefaultView(_findings);
+        view.Filter = item =>
+        {
+            if (item is not ThreatRow row) return false;
+            if (query.Length == 0) return true;
+            return row.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                row.Level.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                row.Source.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                row.Path.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                row.Evidence.Contains(query, StringComparison.OrdinalIgnoreCase);
+        };
+        view.Refresh();
     }
 
     private void UpdateSearchTimer() =>

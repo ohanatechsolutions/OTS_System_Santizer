@@ -1,4 +1,4 @@
-#define AppVersion "0.3.0"
+#define AppVersion "0.4.0"
 #define AppName "OTS System Sanitizer"
 [Setup]
 AppId={{4FA33E75-8824-4C7E-8B2B-AB5BE5064799}

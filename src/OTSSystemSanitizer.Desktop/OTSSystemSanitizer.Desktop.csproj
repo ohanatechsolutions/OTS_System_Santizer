@@ -12,7 +12,12 @@
   <Company>Ohana Tech Solutions</Company>
   <Product>OTS System Sanitizer</Product>
   <Description>Windows Anti-Malware: Search and Destroy</Description>
-  <Version>0.3.0</Version>
+  <Version>0.4.0</Version>
  </PropertyGroup>
- <ItemGroup><ProjectReference Include="..\OTSSystemSanitizer.Core\OTSSystemSanitizer.Core.csproj"/></ItemGroup>
+ <ItemGroup>
+  <ProjectReference Include="..\OTSSystemSanitizer.Core\OTSSystemSanitizer.Core.csproj"/>
+  <!-- Header artwork is a WPF resource; the .ico is also the Windows exe/installer icon. -->
+  <Resource Include="Assets\OTSSystemSanitizer.png"/>
+  <Resource Include="Assets\OTSSystemSanitizer.ico"/>
+ </ItemGroup>
 </Project>

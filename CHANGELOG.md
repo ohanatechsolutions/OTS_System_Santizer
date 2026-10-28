@@ -2,6 +2,18 @@
 
 All notable changes to OTS System Sanitizer are recorded here.
 
+## [0.4.0] — Steel-blue desktop visual refresh
+
+- Added dark slate and steel blue theme resources with rounded glass-style cards,
+  thin borders, hover and focus states, and a vertical workspace navigation.
+- Updated dashboard typography, spacing, search controls and findings tables.
+- Added live, local-only filtering of threat findings by path, source and evidence.
+- Installed user's shield/check/gear/magnifier artwork as in-app PNG and
+  Windows ICO (including installer/shortcut branding).
+- Preserved existing search, selection, quarantine, investigation, and
+  destruction business logic; no GitHub connections added.
+- Included new assets in WPF Resource build and updated installer version.
+
 ## [0.3.0] — Search and Destroy and product separation
 
 - Added elapsed search timer, Quick Search / Deep Search names and the

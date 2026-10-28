@@ -1,7 +1,9 @@
 # OTS System Sanitizer — release readiness checklist
 
-## Included in preview (v0.3.0)
+## Included in preview (v0.4.0)
 - [x] WPF desktop dashboard for Windows x64
+- [x] Dark steel-blue theme, left navigation, rounded glass-style panels and user-provided PNG/ICO branding
+- [x] Threat findings filter for already-searched local results
 - [x] Rebranded app, binaries, namespaces, icon resource and installer with unchanged upgrade AppId
 - [x] Legacy quarantine compatibility without retaining repository credential management
 - [x] Quick/Deep Search actions, progress, cancellation and elapsed timer
