@@ -4,7 +4,7 @@
  Title="OTS System Sanitizer — Search and Destroy"
  Icon="Assets/OTSSystemSanitizer.ico"
  Height="780" Width="1280" MinHeight="540" MinWidth="760"
- WindowStartupLocation="CenterScreen">
+ WindowStartupLocation="Manual">
  <Grid Margin="20">
   <Grid.RowDefinitions>
    <RowDefinition Height="Auto"/><RowDefinition Height="16"/><RowDefinition Height="Auto"/>
