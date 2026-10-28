@@ -6,6 +6,9 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Runtime.InteropServices;
 using System.Windows.Data;
 using OTSSystemSanitizer.Core;
 
@@ -38,6 +41,68 @@ public partial class MainWindow : Window
         InstalledAppList.ItemsSource = _apps;
         RefreshVault();
         Log("Application started; no threats assumed absent until relevant searches complete.");
+    }
+
+    // Native monitor work-area rectangles are physical pixels; WPF uses DPI-independent units.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public NativeRect Monitor;
+        public NativeRect Work;
+        public uint Flags;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern nint MonitorFromWindow(nint hwnd, uint flags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfoW(nint monitor, ref MonitorInfo info);
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        FitToMonitorWorkArea();
+    }
+
+    private void FitToMonitorWorkArea()
+    {
+        // Default to the primary work area if native monitor enumeration is unavailable.
+        var area = SystemParameters.WorkArea;
+        var monitor = MonitorFromWindow(new WindowInteropHelper(this).Handle, 2); // nearest
+        if (monitor != nint.Zero)
+        {
+            var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+            if (GetMonitorInfoW(monitor, ref info))
+            {
+                var transform = PresentationSource.FromVisual(this)?.CompositionTarget?
+                    .TransformFromDevice ?? Matrix.Identity;
+                var topLeft = transform.Transform(new Point(info.Work.Left, info.Work.Top));
+                var bottomRight = transform.Transform(new Point(info.Work.Right, info.Work.Bottom));
+                if (bottomRight.X > topLeft.X && bottomRight.Y > topLeft.Y)
+                    area = new Rect(topLeft, bottomRight);
+            }
+        }
+
+        // Fit within usable monitor space, keeping some breathing room on all sides.
+        var width = Math.Min(1280, Math.Max(1, area.Width * 0.94));
+        var height = Math.Min(780, Math.Max(1, area.Height * 0.94));
+        MinWidth = Math.Min(760, width);
+        MinHeight = Math.Min(540, height);
+        Width = width;
+        Height = height;
+        Left = area.Left + (area.Width - width) / 2;
+        Top = area.Top + (area.Height - height) / 2;
     }
 
     private void Log(string message)
