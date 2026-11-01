@@ -1,0 +1,33 @@
+name: OTS System Sanitizer — untrusted PR checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ots-sanitizer-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build desktop application (no publishing)
+        run: dotnet build src/OTSSystemSanitizer.Desktop/OTSSystemSanitizer.Desktop.csproj --configuration Release --nologo
+      - name: Verify cleanup and quarantine safety tests
+        run: dotnet run --project tests/OTSSystemSanitizer.SmokeTests/OTSSystemSanitizer.SmokeTests.csproj --configuration Release
