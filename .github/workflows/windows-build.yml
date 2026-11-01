@@ -5,6 +5,8 @@ on:
     branches: [main]
     tags: ['v*']
     paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
       - 'installer/OTSSystemSanitizerSetup-x64.exe'
       - 'installer/OTSSystemSanitizerSetup-x64.sha256'
   pull_request:
@@ -20,6 +22,7 @@ concurrency:
 jobs:
   build:
     runs-on: windows-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -93,6 +96,7 @@ jobs:
             installer/output/OTSSystemSanitizerSetup-x64.exe
             installer/output/OTSSystemSanitizerSetup-x64.sha256
           if-no-files-found: error
+          retention-days: 7
       - name: Check actual installer into installer folder
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
