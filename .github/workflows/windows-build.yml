@@ -9,7 +9,6 @@ on:
       - 'docs/**'
       - 'installer/OTSSystemSanitizerSetup-x64.exe'
       - 'installer/OTSSystemSanitizerSetup-x64.sha256'
-  pull_request:
   workflow_dispatch:
 
 permissions:
