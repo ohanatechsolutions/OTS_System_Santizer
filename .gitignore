@@ -9,3 +9,23 @@ installer/output/
 *.pdb
 *.log
 *.tmp
+
+# Open-source publication security baseline
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+secrets.json
+*.sqlite
+*.sqlite3
+*.db
