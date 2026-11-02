@@ -1,6 +1,7 @@
 name: OTS System Sanitizer — untrusted PR checks
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
     paths-ignore:
@@ -16,6 +17,7 @@ concurrency:
 
 jobs:
   validate:
+    if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
