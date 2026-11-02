@@ -60,6 +60,8 @@ jobs:
           if report_path.exists():
               try:
                   data = json.loads(report_path.read_text())
+                  if data is None:  # JSON null denotes no findings in some versions
+                      data = []
                   if not isinstance(data, list):
                       raise ValueError('Unexpected scan report schema')
               except (OSError, ValueError):
